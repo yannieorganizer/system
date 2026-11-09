@@ -188,6 +188,7 @@
         <select id="tplSelect" aria-label="Pilih paket" style="flex:1;min-width:220px;max-width:420px"></select>
         <button class="btn" id="btnDup" title="Salin paket ini jadi paket baru">+ Paket baru</button>
         <button class="btn" id="btnSave">Pertahankan Template</button>
+        <button class="btn" id="btnGuide" title="Unduh buku panduan sistem (PDF)">Panduan (PDF)</button>
         <button class="btn outline" id="btnHist">Riwayat Event <span class="cnt" id="histCnt">0</span></button>
       </div>
       <div class="ev-banner" id="evBanner" style="display:none">
@@ -1004,7 +1005,7 @@
 
   // ================= PDF (dibuat langsung di halaman) =================
   const HW = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584,761,556,556,222,556,333,1000,556,556,333,1000,667,333,1000,556,611,556,556,222,222,333,333,350,556,1000,333,1000,500,333,944,556,500,667,278,333,556,556,556,556,260,556,333,737,370,556,584,333,737,333,400,584,333,333,333,556,537,278,333,333,365,556,834,834,834,611,667,667,667,667,667,667,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,500,556,556,556,556,278,278,278,278,556,556,556,556,556,556,556,584,611,556,556,556,556,500,556,500], HWB = [278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584,761,556,611,278,556,500,1000,556,556,333,1000,667,333,1000,611,611,611,611,278,278,500,500,350,556,1000,333,1000,556,333,944,611,500,667,278,333,556,556,556,556,280,556,333,737,370,556,584,333,737,333,400,584,333,333,333,611,556,278,333,333,365,556,834,834,834,611,722,722,722,722,722,722,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,556,556,556,556,556,278,278,278,278,611,611,611,611,611,611,611,584,611,611,611,611,611,556,611,556];
-  const WIN = { "€":128, "‚":130, "„":132, "…":133, "‘":145, "’":146, "“":147, "”":148, "•":149, "–":150, "—":151, "−":45, "→":187, "✓":118 };
+  const WIN = { "€":128, "‚":130, "„":132, "…":133, "‘":145, "’":146, "“":147, "”":148, "•":149, "–":150, "—":151, "−":45, "→":187, "✓":118, "‹":139, "›":155 };
   function encW(str){ const out = []; for (const ch of String(str)) { let c = ch.charCodeAt(0); if (WIN[ch] != null) c = WIN[ch]; else if (c > 255 || (c >= 127 && c < 160) || c < 32) c = 63; out.push(c); } return out; }
   function strW(codes, bold, size){ const w = bold ? HWB : HW; let s = 0; codes.forEach(c => { s += w[c - 32] || 556; }); return s * size / 1000; }
   function pdfLit(codes){ return "(" + codes.map(c => (c === 40 || c === 41 || c === 92) ? "\\" + String.fromCharCode(c) : (c > 126 ? "\\" + c.toString(8).padStart(3, "0") : String.fromCharCode(c))).join("") + ")"; }
@@ -1162,6 +1163,195 @@
   }
   $("btnPdfEv").addEventListener("click", () => { if (editing && editing.dirty) toast("Catatan: PDF memakai angka yang sedang tampil (belum disimpan)"); exportPdf(cur()); });
 
+
+  // ================= PANDUAN SISTEM (PDF) =================
+  function buildGuidePdf(){
+    const d = Pdf(), M = 50, W = d.W, H = d.H, GOLD = "#b8912f", DARK = "#0b0b0c", MUTED = "#6e6657", INK = "#2b2720", LINE = "#e6dfd1";
+    const lj = logoJpeg(); if (lj) d.setImage(lj.b, lj.w, lj.h);
+    let y = 0;
+    const ensure = n => { if (y + n > H - 56) { d.addPage(); y = 56; } };
+    function wrap(text, size, bold, maxW){
+      const out = []; String(text).split("\n").forEach(par => { let line = "";
+        par.split(" ").forEach(w => { const t = line ? line + " " + w : w; if (d.width(t, size, bold) > maxW && line) { out.push(line); line = w; } else line = t; });
+        out.push(line); }); return out;
+    }
+    const para = (t, o) => { o = o || {}; const size = o.size || 10, x = o.x || M, lh = size * 1.45;
+      wrap(t, size, o.bold, W - M - x).forEach(l => { ensure(lh); d.text(l, x, y + size, { size, bold: o.bold, color: o.color || INK }); y += lh; }); y += o.after == null ? 6 : o.after; };
+    const bullet = (t, o) => { o = o || {}; const size = 10, x = M + (o.indent || 0) + 14, lh = size * 1.45, ls = wrap(t, size, false, W - M - x);
+      ls.forEach((l, i) => { ensure(lh); if (i === 0) d.text(o.num ? o.num + "." : "•", M + (o.indent || 0) + 2, y + size, { size, bold: !!o.num, color: GOLD }); d.text(l, x, y + size, { size, color: INK }); y += lh; }); y += 3; };
+    let secNo = 0;
+    const section = t => { y += 10; ensure(60); secNo++;
+      d.rect(M, y, 26, 26, DARK); d.text(String(secNo), M + 13, y + 17.5, { size: 12, bold: true, color: "#d8b45a", align: "center" });
+      d.text(t, M + 36, y + 18, { size: 15, bold: true, color: "#1f1b14" }); y += 34; d.line(M, y, W - M, y, LINE, 0.6); y += 12; };
+    const sub = t => { ensure(34); d.text(t, M, y + 11, { size: 11.5, bold: true, color: GOLD }); y += 19; };
+    const tip = t => { const ls = wrap(t, 9.5, false, W - 2 * M - 26), h = ls.length * 14 + 14; ensure(h + 6);
+      d.rect(M, y, W - 2 * M, h, "#f6f0e1"); d.rect(M, y, 3, h, GOLD);
+      ls.forEach((l, i) => d.text(l, M + 14, y + 17 + i * 14, { size: 9.5, color: "#5b4a1e" })); y += h + 10; };
+
+    // ---- sampul ----
+    d.rect(0, 0, W, H, DARK);
+    d.image(W / 2 - 112, 170, 224, 128);
+    d.text("BUKU PANDUAN", W / 2, 360, { size: 13, bold: true, color: "#a29d92", align: "center" });
+    d.text("Sistem Profit per Event", W / 2, 396, { size: 28, bold: true, color: "#d8b45a", align: "center" });
+    d.text("Yannie Wedding Organizer", W / 2, 424, { size: 13, color: "#e8e3d8", align: "center" });
+    d.line(W / 2 - 60, 448, W / 2 + 60, 448, "#d8b45a", 1);
+    d.text("Panduan penggunaan untuk admin & owner", W / 2, 474, { size: 10.5, color: "#a29d92", align: "center" });
+    d.text("Versi " + fmtDateLong(new Date().toISOString().slice(0, 10)).replace(/^\w+, /, ""), W / 2, H - 80, { size: 9, color: "#7d786f", align: "center" });
+    d.text("Disusun oleh Box Design", W / 2, H - 64, { size: 9, color: "#7d786f", align: "center" });
+
+    // ---- daftar isi ----
+    d.addPage(); y = 60;
+    d.text("Daftar Isi", M, y, { size: 20, bold: true, color: "#1f1b14" }); y += 26;
+    const toc = ["Tentang sistem ini", "Tampilan layar", "Memilih paket", "Mengisi biaya per kategori", "Add-ons dari client",
+      "Membaca ringkasan profit", "Mengisi data event", "Menyimpan event", "Riwayat Event", "Laporan PDF per event",
+      "Membuat paket baru", "Pertahankan Template", "Mode terang & gelap", "Hal penting yang perlu diperhatikan", "Lampiran: daftar paket"];
+    toc.forEach((t, i) => { d.text(String(i + 1).padStart(2, "0"), M, y + 12, { size: 11, bold: true, color: GOLD }); d.text(t, M + 30, y + 12, { size: 11, color: INK });
+      y += 22; d.line(M, y, W - M, y, LINE, 0.4); y += 4; });
+
+    // ---- isi ----
+    d.addPage(); y = 56;
+    section("Tentang sistem ini");
+    para("Sistem Profit per Event membantu Yannie Wedding Organizer menghitung berapa keuntungan perusahaan dari setiap acara. Harga paket yang dibayar client dikurangi semua biaya yang keluar untuk acara tersebut, dan hasilnya langsung terlihat saat angka diisi.");
+    para("Sistem ini bisa dibuka di laptop maupun HP melalui browser (Chrome disarankan). Tidak perlu memasang aplikasi.");
+    sub("Fitur utama");
+    ["Daftar " + Object.keys(state.templates).length + " paket wedding lengkap dengan isi dan harga sesuai brosur.",
+     "Kolom biaya untuk setiap item, dengan subtotal per kategori yang terhitung otomatis.",
+     "Kategori Operasional Dekorasi: gaji karyawan dekorasi, uang makan di event, uang operasional perjalanan event, dan uang entertain.",
+     "Add-ons untuk permintaan tambahan client di luar paket.",
+     "Ringkasan profit dan margin yang berubah langsung setiap kali angka diisi.",
+     "Simpan event per client, lengkap dengan riwayat perubahan profitnya.",
+     "Laporan PDF per event untuk arsip atau dikirim ke owner.",
+     "Pembuatan paket baru dan penyimpanan harga terbaru (Pertahankan Template)."].forEach(t => bullet(t));
+
+    section("Tampilan layar");
+    para("Dari atas ke bawah, layar terbagi menjadi beberapa bagian:");
+    [["Kepala halaman", "Logo Yannie, judul sistem, dan tombol bulan/matahari untuk mengganti mode gelap atau terang."],
+     ["Baris tombol", "Kotak Cari venue, pilihan paket, tombol + Paket baru, Pertahankan Template, Panduan (PDF), dan Riwayat Event."],
+     ["Data paket", "Nama paket, jumlah pax, dan harga paket."],
+     ["Data event", "Nama client, tanggal acara, dan venue."],
+     ["Rincian biaya", "Kotak-kotak kategori (Venue, Rias Busana, Dekorasi, dan seterusnya) berisi item beserta kolom biayanya."],
+     ["Add-ons", "Tambahan permintaan client."],
+     ["Ringkasan di bawah", "Selalu terlihat di bagian bawah layar: harga paket, add-ons, total pendapatan, total biaya, dan profit perusahaan."]]
+      .forEach((x, i) => bullet(x[0] + " — " + x[1], { num: i + 1 }));
+
+    section("Memilih paket");
+    ["Klik pilihan paket (kotak panjang di baris tombol), lalu pilih paket yang diambil client.",
+     "Atau ketik nama venue di kotak Cari venue, misalnya \"aston\" atau \"aula\". Paket yang cocok langsung terbuka.",
+     "Isi paket (rias busana, dekorasi, catering, dan lainnya) langsung tampil sesuai brosur."].forEach((t, i) => bullet(t, { num: i + 1 }));
+    tip("Di bawah Harga Paket tertulis \"Sudah termasuk venue\". Khusus paket Harris Ballroom tertulis \"Belum termasuk gedung & catering\", karena harganya memang belum termasuk keduanya.");
+
+    section("Mengisi biaya per kategori");
+    para("Setiap item punya kolom biaya di sebelah kanannya. Isi dengan biaya yang dikeluarkan perusahaan untuk item tersebut. Titik pemisah ribuan muncul otomatis, jadi cukup ketik angkanya saja, misalnya 5000000.");
+    ["Subtotal tiap kategori muncul di pojok kanan atas kotaknya.",
+     "Tombol + Tambah item di bawah setiap kategori menambah baris baru, misalnya untuk biaya yang tidak ada di brosur.",
+     "Tanda × di ujung baris menghapus item tersebut.",
+     "Nama item dan nama kategori bisa diklik lalu diubah.",
+     "Kotak Operasional Dekorasi (label BIAYA OPS) ada di bawah Dekorasi pada setiap paket. Isi dengan gaji karyawan dekorasi, uang makan di event, uang operasional perjalanan event, dan uang entertain."].forEach(t => bullet(t));
+    tip("Item di kategori Free juga bisa diberi biaya, karena walaupun gratis untuk client, perusahaan tetap mengeluarkan biaya.");
+
+    section("Add-ons dari client");
+    para("Add-ons dipakai kalau client meminta tambahan di luar paket, sehingga harga yang dibayar client lebih dari harga paket.");
+    ["Harga ke client: harga yang ditagihkan ke client. Angka ini menambah pendapatan.",
+     "Modal: biaya yang dikeluarkan perusahaan untuk add-on tersebut. Angka ini menambah biaya.",
+     "Klik + Tambah add-on untuk menambah baris kosong.",
+     "Beberapa paket punya tombol cepat sesuai brosur, misalnya Charge acara malam (Rp 5.000.000) atau Add-on catering per pax.",
+     "Tombol + Tambah pax catering dipakai untuk tambahan jumlah tamu."].forEach(t => bullet(t));
+
+    section("Membaca ringkasan profit");
+    para("Bagian bawah layar selalu menampilkan hasil perhitungan dan berubah langsung setiap kali angka diisi:");
+    [["Harga Paket", "harga paket sesuai brosur."], ["+ Add-ons", "total harga add-ons ke client."], ["Total Pendapatan", "harga paket + add-ons."],
+     ["− Total Biaya", "jumlah semua biaya item + modal add-ons."], ["Sisa / Profit Perusahaan", "total pendapatan dikurangi total biaya, beserta persentase margin."]]
+      .forEach(x => bullet(x[0] + " — " + x[1]));
+    para("Garis warna di atas ringkasan menunjukkan perbandingannya: merah untuk biaya dan hijau untuk sisa profit. Kalau profit berwarna merah dengan tanda minus, berarti biaya lebih besar dari pendapatan (rugi).");
+    tip("Contoh: harga paket Rp 165.000.000. Setelah biaya venue Rp 5.000.000 diisi, profit langsung menjadi Rp 160.000.000.");
+
+    section("Mengisi data event");
+    ["Nama Client / Pengantin: ketik nama pasangan, misalnya Rina & Dimas.",
+     "Tanggal Acara: klik kolomnya, kalender langsung muncul. Pindah bulan dengan tombol ‹ › atau pilihan bulan dan tahun, lalu klik tanggalnya. Tombol Hari ini dan Kosongkan tersedia di bawah kalender.",
+     "Venue: terisi otomatis sesuai paket, tapi bisa diubah."].forEach(t => bullet(t));
+
+    section("Menyimpan event");
+    ["Setelah nama client diisi, tombol Simpan Event muncul di bawah angka profit (bagian bawah layar).",
+     "Klik Simpan Event. Perhitungan client tersebut tersimpan ke Riwayat Event.",
+     "Layar berubah menampilkan event yang baru disimpan, dengan judul \"Event: nama client\" di bagian atas.",
+     "Kalau ada perubahan biaya, ubah angkanya lalu klik Simpan Perubahan. Setiap penyimpanan tercatat di riwayat.",
+     "Klik Tutup Event untuk kembali ke kalkulator paket dan mengisi client berikutnya."].forEach((t, i) => bullet(t, { num: i + 1 }));
+    tip("Setelah event disimpan dan ditutup, kolom nama client dan tanggal di kalkulator dikosongkan, sedangkan angka biaya tetap ada supaya bisa dipakai lagi untuk client berikutnya.");
+
+    section("Riwayat Event");
+    para("Klik tombol Riwayat Event (angka di tombol menunjukkan jumlah event tersimpan). Panel riwayat terbuka di sisi kanan layar.");
+    ["Setiap kartu event menampilkan nama client, tanggal acara, venue, paket, pendapatan, biaya, profit, margin, dan waktu terakhir disimpan.",
+     "Buka perhitungan: membuka kembali rincian lengkap event tersebut di kalkulator.",
+     "PDF: mengunduh laporan profit event tersebut.",
+     "Riwayat (n): menampilkan setiap kali event disimpan beserta perubahan profitnya, misalnya (−Rp 8.500.000) kalau biaya naik.",
+     "Hapus: menghapus event. Sistem selalu meminta konfirmasi terlebih dahulu.",
+     "Kotak pencarian di atas daftar untuk mencari nama client, venue, atau paket."].forEach(t => bullet(t));
+
+    section("Laporan PDF per event");
+    para("Laporan PDF bisa diunduh dari tombol PDF di Riwayat Event, atau dari tombol Export PDF saat sebuah event sedang dibuka. Isi laporannya:");
+    ["Kop dengan logo Yannie dan tanggal cetak.", "Data client, tanggal acara, paket, venue, jumlah pax, dan waktu terakhir disimpan.",
+     "Kotak ringkasan: harga paket, add-ons, total pendapatan, total biaya, dan profit beserta margin.",
+     "Rincian biaya per kategori dan per item, termasuk Operasional Dekorasi.", "Daftar add-ons (harga ke client, modal, untung).",
+     "Riwayat penyimpanan event.", "Nomor halaman di setiap halaman."].forEach(t => bullet(t));
+
+    section("Membuat paket baru");
+    ["Klik + Paket baru. Halaman kosong muncul dengan kategori dan item standar (Venue, Rias Busana, Dekorasi, Operasional Dekorasi, Dokumentasi, Hiburan, MC, WO, Catering, Menu After Akad, Gubukan, Free).",
+     "Isi nama paket, jumlah pax, harga paket, dan venue. Item Sewa venue otomatis mengikuti nama venue yang diketik.",
+     "Sesuaikan item: ubah nama, tambah, atau hapus item sesuai brosur paket baru.",
+     "Klik Pertahankan Template. Nama paket dan harga paket wajib diisi sebelum bisa disimpan.",
+     "Paket baru muncul di pilihan paket bersama paket lainnya."].forEach((t, i) => bullet(t, { num: i + 1 }));
+
+    section("Pertahankan Template");
+    para("Tombol Pertahankan Template menyimpan isi paket yang sedang terbuka (nama, harga, item, dan angka biaya) supaya tetap sama saat halaman dibuka lagi. Gunakan tombol ini saat harga paket atau biaya standar berubah.");
+    para("Tulisan kecil di bawah baris tombol menunjukkan statusnya: \"Ada perubahan yang belum dipertahankan\" berarti ada angka yang belum disimpan ke template.");
+    tip("Paket tidak bisa dihapus dari sistem. Ini disengaja supaya tidak ada paket yang terhapus secara tidak sengaja.");
+
+    section("Mode terang & gelap");
+    para("Klik tombol bulan atau matahari di pojok kanan atas untuk berganti antara mode gelap (latar hitam) dan mode terang (latar krem). Pilihan mode tetap tersimpan saat halaman dibuka lagi.");
+
+    section("Hal penting yang perlu diperhatikan");
+    ["Data event dan template tersimpan di browser perangkat yang dipakai. Event yang disimpan di laptop admin tidak otomatis muncul di HP owner. Untuk dibagikan, kirim laporan PDF-nya.",
+     "Gunakan perangkat dan browser yang sama untuk mencatat event, supaya riwayat tetap terkumpul di satu tempat.",
+     "Jangan menghapus data browser (Clear browsing data / cookies & site data) di perangkat admin, karena riwayat event bisa ikut terhapus.",
+     "Unduh PDF setiap event penting sebagai arsip cadangan.",
+     "Pada versi berikutnya, data akan disimpan ke database online, sehingga owner dan admin bisa melihat data yang sama dari perangkat mana pun."].forEach(t => bullet(t));
+
+    // ---- lampiran daftar paket ----
+    secNo = 14; if (y > H - 320) { d.addPage(); y = 56; }
+    section("Lampiran: daftar paket");
+    para("Daftar paket yang tersedia di sistem saat panduan ini diunduh.", { color: MUTED });
+    const cols = [["NO", M + 8], ["VENUE", M + 36], ["PAX", W - M - 150, "right"], ["HARGA PAKET", W - M - 8, "right"]];
+    const head = () => { d.rect(M, y, W - 2 * M, 20, DARK); cols.forEach(c => d.text(c[0], c[1], y + 13.5, { size: 8, bold: true, color: "#ffffff", align: c[2] })); y += 20; };
+    head();
+    Object.values(state.templates).filter(t => t.name).sort((a, b) => (a.event.venue || a.name).localeCompare(b.event.venue || b.name)).forEach((t, i) => {
+      if (y + 18 > H - 56) { d.addPage(); y = 56; head(); }
+      if (i % 2) d.rect(M, y, W - 2 * M, 18, "#f7f4ee");
+      d.text(String(i + 1), M + 8, y + 12.5, { size: 8.5, color: MUTED });
+      d.text((t.event.venue || t.name) + (t.categories.some(c => c.id === "venue") ? "" : " (belum termasuk gedung & catering)"), M + 36, y + 12.5, { size: 8.5, color: INK, maxW: W - 2 * M - 230 });
+      d.text(t.pax ? String(t.pax) : "-", W - M - 150, y + 12.5, { size: 8.5, color: INK, align: "right" });
+      d.text("Rp " + fmt(t.price || 0), W - M - 8, y + 12.5, { size: 8.5, bold: true, color: INK, align: "right" });
+      y += 18; });
+
+    // ---- footer (kecuali sampul) ----
+    const np = d.pages.length;
+    for (let i = 1; i < np; i++) { d.onPage(i);
+      d.line(M, H - 34, W - M, H - 34, LINE, 0.5);
+      d.text("Panduan Sistem Profit per Event — Yannie Wedding Organizer", M, H - 20, { size: 7.5, color: MUTED });
+      d.text("Halaman " + (i + 1) + " dari " + np, W - M, H - 20, { size: 7.5, color: MUTED, align: "right" }); }
+    return d.output();
+  }
+  window.__buildGuidePdf = buildGuidePdf;
+  async function saveFile(name, bytesArr, mime){
+    if (!downloads) {
+      try { const url = URL.createObjectURL(new Blob([bytesArr], { type: mime })), a = document.createElement("a");
+        a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); toast("PDF diunduh ✓"); }
+      catch (err) { toast("PDF belum bisa diunduh di tampilan ini"); }
+      return;
+    }
+    try { await downloads.save({ filename: name, data: new Blob([bytesArr], { type: mime }) }); toast("PDF diunduh ✓"); }
+    catch (err) { if (err && err.code === "declined") return; toast("PDF belum bisa diunduh di tampilan ini"); }
+  }
+  $("btnGuide").addEventListener("click", () => saveFile("Panduan Sistem Profit per Event - Yannie Wedding.pdf", buildGuidePdf(), "application/pdf"));
 
   // ================= kalender tanggal acara =================
   const BULAN = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
