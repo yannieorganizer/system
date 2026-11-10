@@ -219,6 +219,14 @@
   .card,.cat{box-shadow:inset 0 1px 0 rgba(216,180,90,.10),0 14px 30px -24px rgba(0,0,0,.55)}
   [data-theme="light"] .card,[data-theme="light"] .cat{box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 16px 34px -26px rgba(110,80,20,.35)}
   .bar-more{display:none}
+  .inp.locked,.money input.locked{background:transparent;border-color:transparent;cursor:default;padding-left:0;font-weight:600}
+  .money input.locked{padding-left:30px}
+  .price-inp.locked{color:var(--hi)}
+  .inp.locked:focus{border-color:transparent}
+  .row input.name.locked{font-weight:600;cursor:default}
+  .row input.name.locked:hover,.row input.name.locked:focus{border-color:transparent;background:transparent}
+  .lock-ic{display:flex;align-items:center;justify-content:center;width:26px;height:26px;color:var(--muted)}
+  .lock-ic svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
   html,body{overflow-x:hidden}
   .drawer{visibility:hidden;transition:transform .25s,visibility .25s}
   .drawer.open{visibility:visible}
@@ -259,6 +267,8 @@
     .hero .card:nth-child(3) #pkgPriceNote{color:#d8b45a!important}
     .hero .card:nth-child(3) .money input{background:transparent;border:none;border-bottom:1px solid rgba(216,180,90,.45);border-radius:0;color:#f0d78c;font-size:30px!important;padding:6px 0 6px 34px;text-align:left;font-family:"Playfair Display",serif}
     .hero .card:nth-child(3) .money span{left:0;color:#a29d92;font-size:14px}
+    .hero .card:nth-child(3) .money input.locked{border-bottom-color:rgba(216,180,90,.25);padding-left:34px}
+    .field .inp.locked{padding-left:2px;height:auto;min-height:30px}
     .field label{font-size:10.5px;letter-spacing:.16em;margin-bottom:8px}
     .field .inp,.dp-input{height:48px;border-radius:14px;padding:10px 14px}
 
@@ -486,7 +496,7 @@
   const OPS_DEKOR = ["Gaji karyawan dekorasi","Uang makan di event","Uang operasional perjalanan event","Uang entertain"];
   const DOKU = ["Foto","Video cinematic","Album + flashdisk"];
   const HIBURAN = ["Penyanyi","Player","MC music","Operator","Soundsystem"];
-  const WO = ["Technical meeting 1x pertemuan","Pembuatan rundown acara","Fee crew WO (4 orang)"];
+  const WO = ["Transport technical meeting","Pembuatan rundown acara","Fee crew WO (4 orang)"];
   const CATERING = ["Nasi putih","Nasi goreng","Aneka soup","Aneka daging","Aneka ikan / ayam","Aneka sayuran",
     "Kerupuk udang","Aneka puding","Aneka buah","Soft drink","Air putih","Mini cake"];
   const AFTER_AKAD = ["Soto ayam 100 pax","Kopi & teh","Air putih"];
@@ -506,7 +516,7 @@
   // Isi kategori versi 2 (berlaku untuk SEMUA paket, termasuk yang sudah tersimpan)
   const VENDOR_PH = "Ketik nama vendor di sini…";
   function migrateTpl(t){
-    if (!t || t.v >= 4 || !Array.isArray(t.categories)) return t;
+    if (!t || t.v >= 5 || !Array.isArray(t.categories)) return t;
     const v0 = t.v || 0;
     if (v0 < 2) t.categories.forEach(c => {
       if (c.id === "rias") c.items = [];
@@ -524,8 +534,13 @@
       else if (c.id === "afterakad" || c.id === "gubukan") c.items = [];
     });
     // v4: kategori Free dimulai kosong
-    t.categories.forEach(c => { if (c.id === "free") c.items = []; });
-    t.v = 4;
+    if (v0 < 4) t.categories.forEach(c => { if (c.id === "free") c.items = []; });
+    // v5: nama item WO & catering baku; baris catering terkunci (nama tidak bisa diubah)
+    t.categories.forEach(c => {
+      if (c.id === "wo") c.items.forEach(it => { if (/^technical meeting/i.test(it.name || "")) it.name = "Transport technical meeting"; });
+      if (c.id === "catering") c.items.forEach((it, i) => { if (i === 0) it.locked = true; });
+    });
+    t.v = 5;
     return t;
   }
   // L = kolom kiri, R = kolom kanan; Operasional Dekorasi selalu disisipkan setelah Dekorasi
@@ -789,7 +804,7 @@
     if (!ex) state.templates[t.id] = t;
     else if (!ex.presets) ex.presets = t.presets;
   });
-  if (Object.values(state.templates).some(t => (t.v || 0) < 4)) { Object.values(state.templates).forEach(migrateTpl); try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {} }
+  if (Object.values(state.templates).some(t => (t.v || 0) < 5)) { Object.values(state.templates).forEach(migrateTpl); try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {} }
   if (!state.templates[state.currentId]) state.currentId = Object.keys(state.templates)[0];
   let editing = null; // { id, draft, dirty } saat membuka event tersimpan
   const cur = () => editing ? editing.draft : state.templates[state.currentId];
@@ -880,6 +895,9 @@
     $("evClient").value = t.event.client || ""; $("evDate").value = t.event.date ? fmtDateLong(t.event.date) : ""; $("evVenue").value = t.event.venue || "";
     const pi = $("pkgPrice"), clone = pi.cloneNode(true); pi.replaceWith(clone);
     bindMoney(clone, () => cur().price, v => { cur().price = v; });
+    // nama paket, pax, harga, venue otomatis dari paket — hanya bisa diisi saat membuat paket baru
+    const open = !editing && !!t.isNew;
+    ["pkgName", "pkgPax", "pkgPrice", "evVenue"].forEach(id => { const el = $(id); el.readOnly = !open; el.classList.toggle("locked", !open); el.tabIndex = open ? 0 : -1; });
   }
 
   function renderCats(){
@@ -903,12 +921,12 @@
 
   function itemRow(c, it){
     const row = document.createElement("div"); row.className = "row"; row.dataset.item = it.id;
-    row.innerHTML = '<input class="name" placeholder="' + esc(it.ph || "Nama item") + '" value="' + esc(it.name) + '">' +
+    row.innerHTML = '<input class="name' + (it.locked ? ' locked' : '') + '" placeholder="' + esc(it.ph || "Nama item") + '" value="' + esc(it.name) + '"' + (it.locked ? ' readonly tabindex="-1"' : '') + '>' +
       '<div class="money"><span>Rp</span><input inputmode="numeric" placeholder="0" aria-label="Biaya"></div>' +
-      '<button class="x" title="Hapus item" aria-label="Hapus item">×</button>';
-    row.querySelector("input.name").addEventListener("input", e => { it.name = e.target.value; markDirty(); });
+      (it.locked ? '<span class="lock-ic" title="Sesuai paket"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>' : '<button class="x" title="Hapus item" aria-label="Hapus item">×</button>');
+    if (!it.locked) row.querySelector("input.name").addEventListener("input", e => { it.name = e.target.value; markDirty(); });
     bindMoney(row.querySelector(".money input"), () => it.cost, v => { it.cost = v; });
-    row.querySelector(".x").addEventListener("click", () => { c.items = c.items.filter(x => x !== it); markDirty(); renderCats(); recalc(); });
+    if (!it.locked) row.querySelector(".x").addEventListener("click", () => { c.items = c.items.filter(x => x !== it); markDirty(); renderCats(); recalc(); });
     return row;
   }
 
@@ -951,7 +969,12 @@
   // header fields
   $("pkgName").addEventListener("input", e => { cur().name = e.target.value; markDirty(); });
   $("pkgName").addEventListener("change", () => { if (!editing) renderSelect(); });
-  $("pkgPax").addEventListener("input", e => { cur().pax = parse(e.target.value); e.target.value = cur().pax || ""; markDirty(); });
+  $("pkgPax").addEventListener("input", e => {
+    const t = cur(); if (e.target.readOnly) return;
+    t.pax = parse(e.target.value); e.target.value = t.pax || ""; markDirty();
+    const cc = t.categories.find(c => c.id === "catering"), it = cc && cc.items.find(x => x.locked);
+    if (it) { it.name = t.pax ? "Catering " + t.pax + " pax" : "Catering"; const inp = document.querySelector('[data-item="' + it.id + '"] input.name'); if (inp) inp.value = it.name; }
+  });
   $("evClient").addEventListener("input", e => { cur().event.client = e.target.value; markDirty(); syncSaveBtn(); renderModeBar(); });
   $("evVenue").addEventListener("input", e => {
     const t = cur(); t.event.venue = e.target.value; markDirty();
@@ -973,8 +996,8 @@
     // paket baru: struktur kategori & item standar, semua isian dikosongkan
     const base = clone(DEFAULTS[0]);
     const t = { id: uid("p"), name: "", pax: 0, price: 0, event: { client: "", date: "", venue: "" },
-      categories: base.categories.map(c => Object.assign(c, { items: c.items.map(it => Object.assign({ id: uid(), name: c.id === "venue" ? "Sewa venue" : it.name, cost: 0 }, it.ph ? { ph: it.ph } : {})) })),
-      addons: [], presets: [], updatedAt: null, isNew: true, v: 4 };
+      categories: base.categories.map(c => Object.assign(c, { items: c.items.map(it => Object.assign({ id: uid(), name: c.id === "venue" ? "Sewa venue" : it.name, cost: 0 }, it.ph ? { ph: it.ph } : {}, it.locked ? { locked: true, name: "Catering" } : {})) })),
+      addons: [], presets: [], updatedAt: null, isNew: true, v: 5 };
     state.templates[t.id] = t; state.currentId = t.id; $("tplSearch").value = ""; markDirty(); renderAll();
     $("pkgName").focus();
     toast("Paket baru — isi nama paket, jumlah pax, harga, dan venue, lalu klik Pertahankan Template");
@@ -1400,7 +1423,7 @@
         "<b>Add-ons</b> — tambahan permintaan client.",
         "<b>Ringkasan di bawah</b> — selalu terlihat di bagian bawah layar: harga paket, add-ons, total pendapatan, total biaya, dan profit perusahaan."]]]],
     ["Memilih paket", [
-      ["ol", ["Klik pilihan paket (kotak panjang di baris tombol), lalu pilih paket yang diambil client.",
+      ["ol", ["Klik pilihan paket (kotak panjang di baris tombol), lalu pilih paket yang diambil client. Nama paket, jumlah pax, harga paket, dan venue langsung terisi otomatis dan tidak bisa diubah.",
         "Atau ketik nama venue di kotak <b>Cari venue</b>, misalnya \"aston\" atau \"aula\". Paket yang cocok langsung terbuka.",
         "Isi paket (rias busana, dekorasi, catering, dan lainnya) langsung tampil sesuai brosur."]],
       ["tip", "Di bawah Harga Paket tertulis \"Sudah termasuk venue\". Khusus paket Harris Ballroom tertulis \"Belum termasuk gedung & catering\", karena harganya memang belum termasuk keduanya."]]],
@@ -1413,7 +1436,7 @@
         "<b>Rias Busana</b> dimulai kosong. Tambahkan biayanya lewat tombol + Tambah item rias busana.",
         "<b>Dekorasi</b> berisi Pembelian bunga. Biaya dekorasi lain ditambahkan lewat + Tambah item dekorasi.",
         "<b>Dokumentasi</b> dan <b>Hiburan Entertainment</b>: ketik nama vendornya di kolom bertuliskan \"Ketik nama vendor di sini…\", lalu isi biayanya.",
-        "<b>Catering</b> berisi satu baris sesuai jumlah pax paket, misalnya Catering 500 pax.",
+        "<b>Catering</b> berisi satu baris sesuai jumlah pax paket, misalnya Catering 500 pax. Nama barisnya terkunci (ikon gembok), cukup isi biayanya.",
         "<b>Menu After Akad</b>, <b>Gubukan</b>, dan <b>Free</b> dimulai kosong. Tambahkan isinya lewat tombol + Tambah item di masing-masing kotak.",
         "Kotak <b>Operasional Dekorasi</b> (label BIAYA OPS) ada di bawah Dekorasi pada setiap paket. Isi dengan gaji karyawan dekorasi, uang makan di event, uang operasional perjalanan event, dan uang entertain."]],
       ["tip", "Item yang ditambahkan di kategori Free juga bisa diberi biaya, karena walaupun gratis untuk client, perusahaan tetap mengeluarkan biaya."]]],
