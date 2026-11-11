@@ -2640,7 +2640,7 @@
     return '<span class="tchip run">Berjalan</span>';
   }
   const moneyInp = (id, v, ph) => '<div class="rp-inp"><span>Rp</span><input class="inp" id="' + id + '" inputmode="numeric" placeholder="' + (ph || "0") + '" value="' + (v ? fmt(v) : "") + '"></div>';
-  function bindMoney(el, onv){ el.addEventListener("input", () => { const v = parse(el.value); el.value = v ? fmt(v) : ""; onv(v); }); }
+  function bindRp(el, onv){ el.addEventListener("input", () => { const v = parse(el.value); el.value = v ? fmt(v) : ""; onv(v); }); }
 
   // ---- kontrak: data pengantin ----
   const SERVICES_TPL = ["Konsultasi dan perencanaan konsep acara pernikahan",
@@ -2791,7 +2791,7 @@
     if (fm.scheme === "full") { box.innerHTML = '<p class="tx-hint ok">Client membayar penuh ' + rp(trxTotal(fm)) + ' saat deal. Nominal dicatat di langkah Transaksi.</p>'; return; }
     box.innerHTML = '<div class="g2"><div class="field"><label for="fDp">Nominal DP *</label>' + moneyInp("fDp", fm.dp) + '<div class="chips" id="fDpChips"></div></div>' + dpField("fDl", "Deadline pelunasan", fm.payDeadline) + '</div>' +
       '<p class="tx-hint">Bawaan deadline H-1 bulan sebelum acara. Termin berikutnya: total bayar 50% di H-6 bulan dan 80% di H-3 bulan.</p>';
-    bindMoney($("fDp"), v => { fm.dp = v; renderFormSide(); });
+    bindRp($("fDp"), v => { fm.dp = v; renderFormSide(); });
     mountDp("fDl", () => fm.payDeadline, iso => { fm.payDeadline = iso; fm.dlAuto = !iso; if (!iso) { fm.payDeadline = defDeadline(fm); $("fDl").value = fm.payDeadline ? fmtDateLong(fm.payDeadline) : ""; } renderFormSide(); });
     renderDpChips();
   }
@@ -2814,7 +2814,7 @@
       moneyInp("fAp" + i, a.price) + '<button type="button" class="btn icon-btn ad-x" aria-label="Hapus">' + svgI('<path d="M18 6 6 18M6 6l12 12"/>') + '</button></div>').join("") : '<div class="tx-empty sm">Belum ada tambahan</div>';
     box.querySelectorAll(".ad-row").forEach(r => { const i = +r.dataset.i;
       r.querySelector(".an").addEventListener("input", e => { fm.addons[i].name = e.target.value; });
-      bindMoney(r.querySelector("#fAp" + i), v => { fm.addons[i].price = v; renderFormSide(); renderDpChips(); });
+      bindRp(r.querySelector("#fAp" + i), v => { fm.addons[i].price = v; renderFormSide(); renderDpChips(); });
       r.querySelector(".ad-x").addEventListener("click", () => { fm.addons.splice(i, 1); renderFormAddons(); renderFormSide(); renderDpChips(); }); });
   }
   function renderFormSide(){
@@ -2902,7 +2902,7 @@
     };
     $("pType").addEventListener("click", e => { const b = e.target.closest("[data-v]"); if (!b) return; pType = b.dataset.v; $("pAmt").value = fmt(defAmt(pType)); paintType(); });
     paintType();
-    bindMoney($("pAmt"), () => {});
+    bindRp($("pAmt"), () => {});
     mountDp("pDate", () => pDate, iso => { pDate = iso || t0; });
     $("apMain").querySelectorAll("[data-bank]").forEach(b => b.addEventListener("click", () => { $("pBank").value = b.dataset.bank; }));
     bindUpload($("pProof"), p => { payProof = p; });
