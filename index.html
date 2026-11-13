@@ -1490,6 +1490,16 @@
   .wb-card .btn{display:inline-flex;align-items:center;gap:6px;width:auto}
   .wb-acts select.inp{width:auto!important;flex:none} .wb-n input.inp{width:64px!important;flex:none} .wb-who.inp{width:190px!important;flex:none}
   .wb-gf .btn{flex:none;height:32px;white-space:nowrap} .wb-card .py-del{display:inline-flex;align-items:center;justify-content:center;color:var(--muted)} .wb-card .py-del:hover{color:var(--red)}
+
+  .adm-tag.a4{background:rgba(150,70,120,.14);color:#8a3f6e} .adm-tag.a5{background:rgba(70,130,100,.15);color:#2f7353}
+  html:not([data-theme="light"]) .adm-tag.a4{color:#f0a9d2} html:not([data-theme="light"]) .adm-tag.a5{color:#8fdcb4}
+  .mgrid.main5{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+  @media (max-width:1400px){ .mgrid.main5{grid-template-columns:repeat(3,minmax(0,1fr))!important} }
+  @media (max-width:900px){ .mgrid.main5{grid-template-columns:1fr!important} }
+  .mgrid.main5 .mcard{padding:24px 18px 20px} .mgrid.main5 .mc-tx small{font-size:12.5px}
+  .stg-row{grid-template-columns:repeat(4,minmax(0,1fr))} @media (max-width:1100px){ .stg-row{grid-template-columns:repeat(2,minmax(0,1fr))} } @media (max-width:640px){ .stg-row{grid-template-columns:1fr} }
+  .wb-asset{margin-bottom:14px} .wb-link .adm-tag{font-size:9.5px;margin-left:4px}
+  .wb-card .tx-empty b{display:inline}
 </style>
 </head>
 <body data-view="login">
@@ -3008,6 +3018,7 @@
 
   // ================= APLIKASI: LOGIN, BERANDA & MODUL =================
   const MODULES = [{"id": "cashflow", "name": "Cashflow Perusahaan", "desc": "Kas masuk & keluar, saldo kas, dan tutup buku bulanan.", "roles": ["owner"], "links": ["transaksi", "profit"], "plan": ["Pencatatan kas masuk & keluar", "Saldo kas harian & bulanan", "Pembayaran client otomatis dari Input Transaksi Penjualan", "Tutup buku bulanan & laporan PDF"], "icon": "<path d=\"M3 3v18h18\"/><path d=\"m7 15 4-4 3 3 6-6\"/><path d=\"M17 8h3v3\"/>"}, {"id": "profit", "name": "Profit per Event", "desc": "Hitung biaya dan profit perusahaan di setiap acara.", "roles": ["owner"], "links": ["transaksi", "pakai-dekorasi", "cashflow"], "plan": [], "icon": "<rect x=\"4\" y=\"2\" width=\"16\" height=\"20\" rx=\"2\"/><path d=\"M8 6h8M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h8\"/>"}, {"id": "transaksi", "name": "Input Transaksi Penjualan", "desc": "Admin 1 · paket, data CPP & CPW, KTP, alamat, dan add-ons.", "roles": ["owner", "admin"], "links": ["fitting", "finance", "profit"], "plan": ["Data client & paket yang diambil", "Pembayaran DP, termin & pelunasan", "Otomatis membuat event di Profit per Event", "Otomatis masuk ke Cashflow Perusahaan"], "icon": "<path d=\"M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z\"/><path d=\"M14 2v6h6M9 13h6M9 17h4\"/>"}, {"id": "finance", "name": "Finance, Invoice & Booking Venue", "desc": "Admin 3 · DP / full payment, invoice 2 halaman, kontrak, dan booking venue.", "roles": ["owner", "admin"], "links": ["transaksi", "cashflow"], "plan": [], "icon": "<path d=\"M4 2h16v20l-3-2-3 2-2-2-2 2-3-2-3 2z\"/><path d=\"M8 7h8M8 11h8M8 15h5\"/>"}, {"id": "fitting", "name": "Jadwal Fitting & Booking Vendor", "desc": "Admin 2 · jadwal fitting client dan status booking setiap vendor.", "roles": ["owner", "admin"], "links": ["transaksi", "aset-busana"], "plan": ["Kalender fitting per hari & minggu", "Client diambil dari Input Transaksi Penjualan", "Busana yang dicoba dari Aset Database Busana", "Pengingat jadwal fitting"], "icon": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"17\" rx=\"2\"/><path d=\"M16 2v4M8 2v4M3 10h18\"/><path d=\"m9 15 2 2 4-4\"/>"}, {"id": "aset-dekorasi", "name": "Aset Database Dekorasi", "desc": "Katalog dan stok aset dekorasi di gudang.", "roles": ["owner", "admin"], "links": ["pakai-dekorasi"], "plan": ["Katalog aset dekorasi lengkap dengan foto", "Jumlah stok & kondisi barang", "Lokasi penyimpanan di gudang", "Riwayat pemakaian per aset"], "icon": "<path d=\"M12 22c4-3 7-6.5 7-10.5a7 7 0 0 0-14 0C5 15.5 8 19 12 22z\"/><path d=\"M12 7v8M8.5 10.5 12 13l3.5-2.5\"/>"}, {"id": "aset-busana", "name": "Aset Database Busana", "desc": "Katalog busana & aksesoris pengantin beserta ukurannya.", "roles": ["owner", "admin"], "links": ["fitting", "pakai-busana"], "plan": ["Katalog busana & aksesoris dengan foto", "Ukuran, warna & kondisi", "Status tersedia / dipakai / laundry", "Riwayat pemakaian per busana"], "icon": "<path d=\"M8 3 4 6l2 4 2-1v12h8V9l2 1 2-4-4-3c-.5 1.7-2 3-4 3S8.5 4.7 8 3z\"/>"}, {"id": "pakai-busana", "name": "Pemakaian Aset Busana per Event", "desc": "Busana yang dipakai di setiap event dan status pengembaliannya.", "roles": ["owner", "admin"], "links": ["aset-busana", "transaksi"], "plan": ["Daftar busana yang keluar per event", "Status kembali, laundry & perbaikan", "Mencegah busana dipakai dobel di tanggal yang sama", "Terhubung ke data client & tanggal acara"], "icon": "<path d=\"M20.4 18.6 12 12l-8.4 6.6A1 1 0 0 0 4.2 20h15.6a1 1 0 0 0 .6-1.4z\"/><path d=\"M12 12V9a2 2 0 1 0-2-2\"/>"}, {"id": "pakai-dekorasi", "name": "Pemakaian Aset Dekorasi per Event", "desc": "Aset dekorasi yang dibawa ke setiap event dan pengembaliannya.", "roles": ["owner", "admin"], "links": ["aset-dekorasi", "profit"], "plan": ["Daftar aset dekorasi yang dibawa per event", "Checklist berangkat & kembali ke gudang", "Mencegah aset bentrok di tanggal yang sama", "Biaya pemakaian terhubung ke Profit per Event"], "icon": "<path d=\"M21 8 12 3 3 8v8l9 5 9-5z\"/><path d=\"m3 8 9 5 9-5M12 13v8\"/>"}];
+  MODULES.push(...[{"id": "wardrobe", "name": "Busana & Perlengkapan", "desc": "Admin 4 \u00b7 baju akad & resepsi, sepatu, aksesoris & ukuran untuk pengantin, orang tua, dan among tamu.", "roles": ["owner", "admin"], "links": ["fitting", "aset-busana", "pakai-busana"], "plan": [], "icon": "<path d=\"M8 3 4 6l2 4 2-1v12h8V9l2 1 2-4-4-3a4 4 0 0 1-8 0z\"/>"}, {"id": "dekorasi", "name": "Dekorasi & Konsep Acara", "desc": "Admin 5 \u00b7 jenis dekorasi, custom request, tema, warna & referensi dari client.", "roles": ["owner", "admin"], "links": ["transaksi", "fitting"], "plan": ["Jenis & paket dekorasi per client (pelaminan, gate, lorong, meja tamu)", "Custom request & tema warna dari client", "Foto referensi & moodboard dekorasi", "Catatan dekorasi terkonfirmasi admin & client", "Otomatis masuk ke Lembar Validasi Hari-H"], "icon": "<circle cx=\"12\" cy=\"9\" r=\"2.4\"/><path d=\"M12 6.6a3 3 0 1 1 2.6 1.5M14.6 8.1a3 3 0 1 1-.6 3.1M14 11.2a3 3 0 1 1-4 0M10 11.2a3 3 0 1 1-.6-3.1M9.4 8.1A3 3 0 1 1 12 6.6M12 11.4V21M12 17c-2-2.5-4.5-2.5-6-2 1 2 3 3.2 6 2M12 18c2-2.5 4.5-2.5 6-2-1 2-3 3.2-6 2\"/>"}]);
   const MOD = Object.fromEntries(MODULES.map(m => [m.id, m]));
   const ROLE_NAME = { owner: "Owner", admin: "Admin" };
   const DEFAULT_PIN = { owner: "1234", admin: "5678" };
@@ -3219,6 +3230,7 @@
     if (m.id === "cashflow") { renderCashflow(); setView("app"); return; }
     if (m.id === "fitting") { renderFittingModule(); setView("app"); updatePayBell(); return; }
     if (m.id === "finance") { renderFinanceModule(); setView("app"); updatePayBell(); return; }
+    if (m.id === "wardrobe") { renderWardrobeModule(); setView("app"); updatePayBell(); return; }
     renderModule(m); setView("app");
   }
   window.addEventListener("hashchange", route);
@@ -3460,8 +3472,8 @@
         (list.length ? list.map(item).join("") : '<div class="sch-empty">Tidak ada event</div>') + '</section>';
       h += '<div class="hm-sec"><h3>Jadwal event</h3><span>dari Input Transaksi Penjualan</span></div><div class="sch-grid">' + col("Minggu ini", wk.now, thisWk) + col("Minggu depan", wk.next, nextWk) + '</div>';
     }
-    const MAIN = ["transaksi", "fitting", "finance"], mainMods = MAIN.map(id => mods.find(m => m.id === id)).filter(Boolean), otherMods = mods.filter(m => !MAIN.includes(m.id));
-    h += '<div class="hm-sec"><h3>Modul sistem</h3><span>alur Admin 1 → Admin 2 &amp; Admin 3</span></div><section class="mgrid main3">' + mainMods.map((m, i) => modCard(m, i).replace('<span class="mc-tx">', '<span class="mc-tx"><i class="mc-adm">' + ["Admin 1", "Admin 2", "Admin 3"][i] + '</i>')).join("") + '</section>';
+    const MAIN = ["transaksi", "fitting", "finance", "wardrobe", "dekorasi"], mainMods = MAIN.map(id => mods.find(m => m.id === id)).filter(Boolean), otherMods = mods.filter(m => !MAIN.includes(m.id));
+    h += '<div class="hm-sec"><h3>Modul sistem</h3><span>alur Admin 1 → Admin 2, 3, 4 &amp; 5</span></div><section class="mgrid main3 main5">' + mainMods.map((m, i) => modCard(m, i).replace('<span class="mc-tx">', '<span class="mc-tx"><i class="mc-adm">' + ["Admin 1", "Admin 2", "Admin 3", "Admin 4", "Admin 5"][i] + '</i>')).join("") + '</section>';
     h += recapHtml();
     if (otherMods.length) h += '<div class="hm-sec"><h3>Modul lainnya</h3><span>' + otherMods.length + ' modul</span></div><section class="mgrid">' + otherMods.map(modCard).join("") + '</section>';
     if (owner) {
@@ -4006,7 +4018,7 @@
   const getPath = (o, path) => path.split(".").reduce((t, k) => t == null ? "" : t[k], o);
   const fIn = (k, label, ph, o) => { o = o || {}; return '<div class="field' + (o.cls ? " " + o.cls : "") + '"><label for="f_' + k.replace(/\./g, "_") + '">' + label + '</label><input class="inp" id="f_' + k.replace(/\./g, "_") + '" data-k="' + k + '"' +
     (o.type ? ' type="' + o.type + '"' : '') + (o.mode ? ' inputmode="' + o.mode + '"' : '') + ' placeholder="' + (ph || "") + '" value="' + esc(getPath(fm, k)) + '">' + (o.after || "") + '</div>'; };
-  const ADM = { a1: "Admin 1 · Penjualan", a2: "Admin 2 · Fitting & Vendor", a3: "Admin 3 · Finance" };
+  const ADM = { a1: "Admin 1 · Penjualan", a2: "Admin 2 · Fitting & Vendor", a3: "Admin 3 · Finance", a4: "Admin 4 · Wardrobe", a5: "Admin 5 · Dekorasi" };
   const admTag = k => '<span class="adm-tag ' + k + '">' + ADM[k] + '</span>';
   let fmKtp = { cpp: null, cpw: null };
   function bindFmInputs(){
@@ -4312,7 +4324,7 @@
     tab = tab || "client";
     if (tab === "vendor") markSeen(x0, "a2"); else if (tab === "finance") markSeen(x0, "a3");
     const x = normContract(x0), st = stageInfo(x), s = st.s, owner = getRole() === "owner", t0 = todayIso(), dl = x.date ? daysBetween(t0, x.date) : null; const wa = waUrl(primaryPhone(x));
-    let h = backBtn(tab === "vendor" ? "fitting" : tab === "finance" ? "finance" : "transaksi", tab === "vendor" ? "Fitting & vendor" : tab === "finance" ? "Finance" : "Transaksi") +
+    let h = backBtn(tab === "vendor" ? "fitting" : tab === "finance" ? "finance" : tab === "wardrobe" ? "wardrobe" : "transaksi", tab === "vendor" ? "Fitting & vendor" : tab === "finance" ? "Finance" : tab === "wardrobe" ? "Busana & perlengkapan" : "Transaksi") +
       '<section class="tx-hero"><div class="th-main"><div class="hm-kicker">No. kontrak <b>' + esc(curContractNo(x)) + '</b></div><h2>' + esc(coupleName(x)) + '</h2>' +
       '<p>' + esc(trxPkgLabel(x)) + '</p><div class="th-meta">' + statusChip(s) + '<span>' + svgI('<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>') + (x.date ? fmtDateLong(x.date) : "-") +
       (dl != null ? ' · ' + (dl > 0 ? "H-" + dl + " hari" : dl === 0 ? "hari ini" : "sudah lewat") : '') + '</span></div></div>' +
@@ -4326,7 +4338,8 @@
     h += '<section class="stg-row">' +
       stCard("a1", "client", "Data client", true, "Paket, CPP & CPW, KTP " + (x.ktp && (x.ktp.cpp || x.ktp.cpw) ? "✓" : "belum") + ", jadwal acara") +
       stCard("a2", "vendor", "Fitting & vendor", st.a2done, "Vendor booked " + st.booked + "/" + st.act + (st.nextFit ? " · fitting " + fmtDate(st.nextFit.date) : " · belum ada fitting")) +
-      stCard("a3", "finance", "Finance & venue", st.a3done, (st.inv ? "Invoice ✓" : "Invoice belum") + " · bayar " + (s.n + OF(x)) + "x · venue " + VB_ST[st.vb].toLowerCase()) + '</section>';
+      stCard("a3", "finance", "Finance & venue", st.a3done, (st.inv ? "Invoice ✓" : "Invoice belum") + " · bayar " + (s.n + OF(x)) + "x · venue " + VB_ST[st.vb].toLowerCase()) +
+      (function(){ const w = wbStats(x); return stCard("a4", "wardrobe", "Busana & perlengkapan", w.n > 0 && w.siap === w.n, w.n ? w.groups + " orang · " + w.siap + "/" + w.n + " item siap" : "Busana akad & resepsi belum diisi"); })() + '</section>';
     h += '<div id="tabBody"></div>';
     $("apMain").innerHTML = h;
     $("apMain").querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => { history.replaceState(null, "", "#trx-" + id + "/" + b.dataset.tab); renderTrxDetail(id, b.dataset.tab); }));
@@ -4336,6 +4349,7 @@
     $("dDel").addEventListener("click", () => deleteClient(x0.id));
     if (tab === "vendor") { renderTabVendor(x0); checkSkipped(x0, "vendor"); }
     else if (tab === "finance") { renderTabFinance(x0); checkSkipped(x0, "finance"); }
+    else if (tab === "wardrobe") renderTabWardrobe(x0);
     else renderTabClient(x0);
   }
   function stepsCard(x, k){
@@ -4417,7 +4431,7 @@
     x.wardrobe = x.wardrobe || [];
     const G = x.wardrobe.filter(g => g.ev === wbTab), st = wbStats(x), cnt = ev => x.wardrobe.filter(g => g.ev === ev).reduce((a, g) => a + (g.items || []).length, 0);
     const sel = (opts, v, attr, cls) => '<select class="inp ' + (cls || "") + '" ' + attr + '>' + opts.map(o => '<option value="' + o[0] + '"' + (o[0] === v ? " selected" : "") + '>' + o[1] + '</option>').join("") + '</select>';
-    let h = '<section class="card tx-card wb-card" id="wbCard"><h4>Busana &amp; perlengkapan ' + admTag("a2") + '<span>' + (st.n ? st.siap + '/' + st.n + ' item siap' : 'belum diisi') + '</span></h4>' +
+    let h = '<section class="card tx-card wb-card" id="wbCard"><h4>Busana &amp; perlengkapan ' + admTag("a4") + '<span>' + (st.n ? st.siap + '/' + st.n + ' item siap' : 'belum diisi') + '</span></h4>' +
       '<p class="wb-sub">Baju, sepatu, aksesoris &amp; ukuran untuk pengantin, orang tua, among tamu, dan keluarga — dipisah per acara akad dan resepsi. Tersimpan otomatis.</p>' +
       '<div class="wb-bar"><div class="seg wb-seg">' + [["akad", "Akad"], ["resepsi", "Resepsi"]].map(e => '<button type="button" data-wbev="' + e[0] + '" class="' + (wbTab === e[0] ? "on" : "") + '">' + e[1] + ' <em>' + cnt(e[0]) + '</em></button>').join("") + '</div>' +
       '<div class="wb-acts"><select class="inp" id="wbRole">' + WB_ROLES.map(r => '<option>' + r + '</option>').join("") + '</select><button class="btn small" id="wbAddG">' + svgI('<path d="M12 5v14M5 12h14"/>') + 'Tambah orang</button>' +
@@ -4458,6 +4472,25 @@
     card.querySelectorAll("[data-idel]").forEach(b => b.addEventListener("click", () => { x.wardrobe.forEach(g => { g.items = g.items.filter(i => i.id !== b.dataset.idel); }); save(true); }));
     card.querySelectorAll("[data-gdel]").forEach(b => b.addEventListener("click", async () => { const g = G(b.dataset.gdel); if (g.items.some(i => i.desc || i.size) && !await ask("Hapus busana " + g.who + "?", "Semua item & ukuran " + g.who + " (" + g.ev + ") akan dihapus.", "Ya, hapus")) return; x.wardrobe = x.wardrobe.filter(q => q.id !== g.id); save(true); }));
   }
+
+  function renderTabWardrobe(x){
+    $("tabBody").innerHTML = '<section class="pnotif info wb-asset"><span class="pn-ic">' + svgI('<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>') + '</span><div class="pn-tx"><b>Segera terhubung ke Aset Database Busana</b><p>Nanti setiap item bisa dipilih langsung dari katalog busana Yannie (foto, ukuran, warna, kondisi) dan otomatis tercatat di Pemakaian Aset Busana per event. Untuk sekarang, isi manual di bawah ini.</p></div></section>' + wardrobeHtml(x);
+    bindWardrobe(x, () => { const y0 = scrollY; renderTrxDetail(x.id, "wardrobe"); scrollTo(0, y0); });
+  }
+  function renderWardrobeModule(){
+    const t0 = todayIso(), L = trxList().filter(x => x.date && x.date >= t0).sort((a, b) => a.date.localeCompare(b.date));
+    const tot = L.reduce((a, x) => { const w = wbStats(x); a.n += w.n; a.s += w.siap; if (!w.n) a.empty++; return a; }, { n: 0, s: 0, empty: 0 });
+    const soon = L.filter(x => { const w = wbStats(x); return daysBetween(t0, x.date) <= 30 && (!w.n || w.siap < w.n); });
+    let h = '<button class="back-link" data-go="beranda" type="button"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>Beranda</button>' +
+      '<section class="tx-top"><div><div class="hm-kicker">' + ADM.a4 + '</div><h2>Busana &amp; Perlengkapan</h2><p>Baju akad &amp; resepsi, sepatu, aksesoris dan ukuran untuk pengantin, orang tua, among tamu &amp; keluarga — per client.</p></div></section>' +
+      '<section class="hm-kpis"><div class="kpi-card"><small>Event mendatang</small><b>' + L.length + '</b><span>dari Input Transaksi</span></div><div class="kpi-card' + (tot.empty ? " warn" : "") + '"><small>Belum diisi</small><b>' + tot.empty + '</b><span>client tanpa data busana</span></div><div class="kpi-card"><small>Item siap</small><b>' + tot.s + '/' + tot.n + '</b><span>seluruh event mendatang</span></div></section>';
+    if (soon.length) h += '<section class="pnotif warn"><span class="pn-ic">' + svgI('<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>') + '</span><div class="pn-tx"><b>' + soon.length + ' client acaranya ≤ 30 hari, busana belum siap</b><p>' + soon.map(x => '<b>' + esc(coupleName(x)) + '</b> (H-' + daysBetween(t0, x.date) + ')').join(", ") + '</p></div></section>';
+    h += '<section class="pnotif info wb-asset"><span class="pn-ic">' + svgI('<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>') + '</span><div class="pn-tx"><b>Terhubung dengan Aset Database Busana &amp; Pemakaian Aset per Event</b><p>Modul aset sedang disiapkan. Setelah aktif, item busana tiap client dipilih dari katalog dan pemakaiannya tercatat otomatis per event.</p><div class="pn-btns"><button class="btn small" data-go="aset-busana">Aset Database Busana</button><button class="btn small" data-go="pakai-busana">Pemakaian Aset Busana</button></div></div></section>';
+    h += '<div class="hm-sec"><h3>Busana per client</h3><span>' + L.length + ' event mendatang</span></div><section class="tx-list">' + (L.length ? L.map(x => { const w = wbStats(x), pc = w.n ? Math.round(w.siap / w.n * 100) : 0, dl = daysBetween(t0, x.date);
+      return '<button class="trx-item" data-go="trx-' + x.id + '/wardrobe">' + evDateChip(x) + '<span class="ti-main"><b>' + esc(coupleName(x)) + '</b><small>' + esc(x.venue || trxPkgLabel(x)) + '</small><span class="ti-bar"><i style="width:' + pc + '%"></i></span><small>' + (w.n ? w.groups + ' orang · ' + w.siap + '/' + w.n + ' item siap' : 'Data busana belum diisi') + '</small></span>' +
+        '<span class="ti-side">' + (!w.n ? '<span class="tchip late">Belum diisi</span>' : w.siap === w.n ? '<span class="tchip ok">Siap</span>' : '<span class="tchip run">Proses</span>') + '<small>H-' + dl + '</small></span></button>'; }).join("") : '<div class="tx-empty sm">Belum ada event mendatang</div>') + '</section>';
+    $("apMain").innerHTML = h;
+  }
   function renderTabVendor(x){
     if (!x.vendors || !x.vendors.length) { x.vendors = defaultVendors(x); putTrx(x); }
     x.fittings = x.fittings || [];
@@ -4474,17 +4507,16 @@
         '<div class="ff-act"><button class="btn" id="ffCancel">Batal</button><button class="btn gold" id="ffSave">Simpan jadwal</button></div></div>'
         : '<button class="btn small" id="ffOpen">' + svgI('<path d="M12 5v14M5 12h14"/>') + 'Tambah jadwal fitting</button>') +
       '<div class="fit-list">' + (fits.length ? fits.map(fitRow).join("") : '<div class="tx-empty sm">Belum ada jadwal fitting</div>') + '</div>' +
-      (function(){ const w = wbStats(x); return '<button type="button" class="wb-link" onclick="document.getElementById(\'wbCard\').scrollIntoView({behavior:\'smooth\',block:\'start\'})">' + svgI('<path d="M8 3 4 6l2 4 2-1v12h8V9l2 1 2-4-4-3a4 4 0 0 1-8 0z"/>') + '<span><b>Busana &amp; perlengkapan</b><small>' + (w.n ? w.groups + ' orang · ' + w.siap + '/' + w.n + ' item siap' : 'Baju akad & resepsi CPP, CPW, orang tua, among tamu — belum diisi') + '</small></span>' + svgI('<path d="m9 18 6-6-6-6"/>') + '</button>'; })() +
+      (function(){ const w = wbStats(x); return '<button type="button" class="wb-link" data-go="trx-' + x.id + '/wardrobe">' + svgI('<path d="M8 3 4 6l2 4 2-1v12h8V9l2 1 2-4-4-3a4 4 0 0 1-8 0z"/>') + '<span><b>Busana &amp; perlengkapan ' + admTag("a4") + '</b><small>' + (w.n ? w.groups + ' orang · ' + w.siap + '/' + w.n + ' item siap' : 'Baju akad & resepsi CPP, CPW, orang tua, among tamu — belum diisi') + '</small></span>' + svgI('<path d="m9 18 6-6-6-6"/>') + '</button>'; })() +
       '</section></div>' +
       '<div class="tx-col"><section class="card tx-card"><h4>Booking vendor<span>' + stageInfo(x).booked + '/' + stageInfo(x).act + ' booked</span></h4>' +
       '<div class="ven-list">' + x.vendors.map(v => '<div class="ven ' + v.status + '" data-vid="' + v.id + '"><div class="ven-h"><input class="inp ven-cat" data-vf="cat" value="' + esc(properCase(v.cat)) + '" aria-label="Kategori vendor"><select class="inp ven-st" data-vf="status">' + Object.entries(VEN_ST).map(e => '<option value="' + e[0] + '"' + (v.status === e[0] ? " selected" : "") + '>' + e[1] + '</option>').join("") + '</select></div>' +
         '<div class="g2"><input class="inp" data-vf="name" placeholder="Nama vendor" value="' + esc(properCase(v.name)) + '"><input class="inp" data-vf="contact" placeholder="Kontak / no. HP vendor" value="' + esc(v.contact) + '"></div>' +
         '<div class="ven-f"><input class="inp" data-vf="note" placeholder="Catatan (paket vendor, DP vendor, dll.)" value="' + esc(v.note) + '"><button class="btn small ghost py-del" data-vdel="' + v.id + '" title="Hapus">' + svgI('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>') + '</button></div>' +
         (v.status === "booked" && v.date ? '<small class="ven-d">Booked ' + fmtDate(v.date) + '</small>' : '') + '</div>').join("") + '</div>' +
-      '<button class="btn small" id="vAdd">' + svgI('<path d="M12 5v14M5 12h14"/>') + 'Tambah vendor</button><span class="ven-saved" id="vSaved"></span></section></div></div>' + wardrobeHtml(x);
+      '<button class="btn small" id="vAdd">' + svgI('<path d="M12 5v14M5 12h14"/>') + 'Tambah vendor</button><span class="ven-saved" id="vSaved"></span></section></div></div>';
     const sy = scrollY; $("tabBody").innerHTML = h; bindSteps();
     const rer = () => { const y0 = scrollY; renderTrxDetail(x.id, "vendor"); scrollTo(0, y0); };
-    bindWardrobe(x, rer);
     if ($("ffOpen")) $("ffOpen").addEventListener("click", () => { fitForm = { trx: x.id, type: FIT_TYPES[(x.fittings || []).length] || "Lainnya", date: "", time: "", place: "", note: "" }; rer(); });
     if ($("ffCancel")) {
       $("ffCancel").addEventListener("click", () => { fitForm = null; rer(); });
@@ -5291,7 +5323,7 @@
   // Kas keluar : otomatis dari biaya event yang disimpan di Profit per Event (per kategori, tanggal acara)
   // Lainnya    : catatan kas manual (gaji kantor, sewa, listrik, pemasukan lain, dll.)
   data.cash = data.cash || {}; data.deletedCash = data.deletedCash || []; data.cashCfg = data.cashCfg || { opening: 0, openingDate: "" };
-  LIVE.add("cashflow"); LIVE.add("fitting"); LIVE.add("finance");
+  LIVE.add("cashflow"); LIVE.add("fitting"); LIVE.add("finance"); LIVE.add("wardrobe");
   const CASH_CAT = {
     out: ["Gaji & honor kantor", "Sewa kantor / gudang", "Listrik, air & internet", "Transportasi", "Marketing & iklan", "Pembelian aset", "Perawatan aset", "Pajak & administrasi", "Prive owner", "Lain-lain"],
     in: ["Pendapatan lain", "Sewa aset", "Modal masuk", "Pengembalian dana", "Lain-lain"] };
