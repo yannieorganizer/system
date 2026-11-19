@@ -1,5 +1,5 @@
 // Service worker: cache tampilan aplikasi supaya cepat dibuka & bisa di-install.
-const C = "absen-yannie-v3", SHELL = ["/absen/", "/absen/index.html", "/absen/logo.png", "/absen/icon-192.png", "/absen/icon-512.png", "/absen/manifest.webmanifest"];
+const C = "absen-yannie-v4", SHELL = ["/absen/", "/absen/index.html", "/absen/logo.png", "/absen/icon-192.png", "/absen/icon-512.png", "/absen/manifest.webmanifest"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(C).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(K => Promise.all(K.filter(k => k !== C).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener("fetch", e => {
