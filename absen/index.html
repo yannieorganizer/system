@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F7F3E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Absen Yannie">
+<title>Absensi · Yannie Wedding Organizer</title>
+<link rel="manifest" href="/absen/manifest.webmanifest">
+<link rel="icon" href="/absen/icon-192.png">
+<link rel="apple-touch-icon" href="/absen/icon-192.png">
+<style>
+  :root{--bg:#F7F3E8;--bg2:#EFE7D6;--panel:#FFFFFF;--line:#E8DEC9;--gold:#A98A4C;--gold2:#E6D7B7;--gold3:#8C6F38;--text:#342B1C;--muted:#82765D;--green:#3F7A55;--red:#A2423C;--amber:#9A6B1F;--serif:"Cormorant Garamond",Georgia,"Times New Roman",serif}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;background:radial-gradient(900px 520px at 85% -10%,rgba(230,215,183,.55),transparent 60%),#F7F3E8;color:var(--text);font-family:"DM Sans",Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px}
+  body{padding:max(14px,env(safe-area-inset-top)) 16px max(20px,env(safe-area-inset-bottom))}
+  .wrap{max-width:480px;margin:0 auto}
+  .top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .top img{width:66px;height:auto}
+  .top .t{flex:1;min-width:0} .top small{display:block;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);font-weight:700} .top b{font-family:var(--serif);font-weight:500;font-size:18px}
+  .icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center;color:var(--gold);cursor:pointer} .icon-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7}
+  .trial{display:flex;gap:8px;align-items:center;justify-content:center;font-size:11px;letter-spacing:.08em;color:#1c0a0e;background:linear-gradient(90deg,var(--gold2),var(--gold));border-radius:999px;padding:6px 12px;font-weight:700;margin-bottom:14px}
+  .clock{text-align:center;margin:4px 0 14px} .clock b{display:block;font-family:var(--serif);font-weight:500;font-size:54px;line-height:1;letter-spacing:.02em} .clock span{display:block;margin-top:6px;color:var(--gold);font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:700} .clock small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+  .cam{position:relative;width:min(78vw,330px);aspect-ratio:1;margin:0 auto;border-radius:50%;overflow:hidden;background:#0b0305;box-shadow:0 30px 70px -30px #000,inset 0 0 0 1px var(--line)}
+  .cam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+  .cam .ring{position:absolute;inset:0;border-radius:50%;pointer-events:none} .cam .ring svg{width:100%;height:100%;transform:rotate(-90deg)} .cam .ring circle{fill:none;stroke-width:4}
+  .cam .ring .bg{stroke:rgba(226,192,138,.18)} .cam .ring .fg{stroke:var(--gold);stroke-linecap:round;transition:stroke-dashoffset .25s,stroke .3s} .cam.ok .ring .fg{stroke:var(--green)} .cam.bad .ring .fg{stroke:var(--red)}
+  .cam .ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);font-size:13px;padding:30px} .cam .ph svg{width:44px;height:44px;fill:none;stroke:var(--gold);stroke-width:1.3;display:block;margin:0 auto 10px}
+  .status{text-align:center;margin:16px 0 6px;min-height:58px} .status b{display:block;font-family:var(--serif);font-weight:500;font-size:24px} .status span{display:block;color:var(--muted);font-size:13px;margin-top:4px} .status.ok b{color:var(--green)} .status.bad b{color:var(--red)} .status.warn b{color:var(--amber)}
+  .who{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px} .who em{font-style:normal;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;padding:5px 10px;border-radius:999px;border:1px solid var(--line);color:var(--gold)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:20px;margin-top:14px;box-shadow:0 1px 2px rgba(52,43,28,.06)}
+  .card h3{margin:0 0 4px;font-family:var(--serif);font-weight:500;font-size:22px} .card p{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.55}
+  .field{margin-bottom:12px} .field label{display:block;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:6px}
+  .inp{width:100%;height:48px;border-radius:14px;border:1px solid var(--line);background:#FDFBF6;color:var(--text);padding:0 14px;font:inherit;font-size:15px;outline:none} .inp:focus{border-color:var(--gold)} select.inp{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),linear-gradient(135deg,var(--gold) 50%,transparent 50%);background-position:calc(100% - 20px) 21px,calc(100% - 15px) 21px;background-size:5px 5px;background-repeat:no-repeat} option{color:#000}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:50px;border-radius:16px;border:1px solid var(--line);background:var(--panel);color:var(--text);font:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:0 18px} .btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2}
+  .btn.gold{background:#342B1C;color:#FDFBF6;border-color:transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 14px 30px -14px rgba(198,154,90,.8)}
+  .btn[disabled]{opacity:.5;pointer-events:none} .row{display:flex;gap:8px} .row .btn{flex:1}
+  .links{display:flex;justify-content:center;gap:18px;margin-top:16px;flex-wrap:wrap} .links button{background:none;border:none;color:var(--gold);font:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px} .links svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2}
+  .res{text-align:center;padding:26px 20px} .res .ic{width:74px;height:74px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center} .res .ic svg{width:36px;height:36px;fill:none;stroke:#fff;stroke-width:2.4}
+  .res.ok .ic{background:linear-gradient(180deg,#46c486,#1d8a55);box-shadow:0 18px 40px -16px #1d8a55} .res.bad .ic{background:linear-gradient(180deg,#ff8f86,#c4433a)}
+  .res b{display:block;font-family:var(--serif);font-weight:500;font-size:26px} .res .nm{display:block;font-size:17px;margin-top:6px} .res small{display:block;color:var(--muted);margin-top:6px;font-size:13px;line-height:1.5}
+  .res .sf{width:96px;height:96px;border-radius:50%;object-fit:cover;margin:12px auto 0;display:block;border:2px solid var(--gold)}
+  .tag{display:inline-block;margin-top:10px;padding:5px 12px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.06em} .tag.late{background:rgba(242,192,99,.15);color:var(--amber)} .tag.on{background:rgba(95,211,154,.14);color:var(--green)}
+  .list{display:flex;flex-direction:column;gap:8px;max-height:44vh;overflow:auto} .li{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:#FDFBF6;border:1px solid var(--line)} .li img{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#000} .li span{flex:1;min-width:0;display:flex;flex-direction:column} .li b{font-size:14px} .li small{color:var(--muted);font-size:12px} .li em{font-style:normal;font-size:11px;font-weight:700;color:var(--gold)}
+  .seg{display:flex;gap:4px;padding:4px;border-radius:14px;background:#FDFBF6;border:1px solid var(--line);margin-bottom:12px} .seg button{flex:1;height:38px;border-radius:10px;border:none;background:none;color:var(--muted);font:inherit;font-weight:600;font-size:13px;cursor:pointer} .seg button.on{background:var(--gold);color:#2a0b13}
+  .hint{font-size:12px;color:var(--muted);line-height:1.5;margin:10px 0 0}
+  .foot{text-align:center;color:var(--muted);font-size:11px;margin-top:22px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:#000c;color:#fff;padding:12px 18px;border-radius:14px;font-size:13.5px;opacity:0;transition:.25s;pointer-events:none;max-width:90vw;text-align:center;z-index:50} .toast.on{opacity:1;transform:translateX(-50%)}
+  .pin{display:flex;gap:10px;justify-content:center;margin:10px 0} .pin input{width:52px;height:58px;text-align:center;font-size:24px;border-radius:14px;border:1px solid var(--line);background:#FDFBF6;color:var(--text)}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="toast" id="toast"></div>
+<script>
+/* =====================================================================
+   ABSENSI YANNIE · aplikasi terpisah (PWA)
+   MODE UJI COBA  : SUPABASE_URL kosong → data tersimpan di perangkat ini.
+   MODE PRODUKSI  : isi SUPABASE_URL & SUPABASE_ANON_KEY → data realtime
+                    ke Supabase dan terbaca oleh sistem utama.
+   ===================================================================== */
+const CONFIG = {
+  SUPABASE_URL: "https://seglzvepigjluylbosrg.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_6w5j4nHe_7xVVwVx6SoKHg_YLnZJunr",
+  TRIAL_PIN: "1234",           // PIN pengaturan saat mode uji coba
+  RADIUS_M: 50,                // radius maksimal dari kantor (meter)
+  MATCH_THRESHOLD: 0.48,       // makin kecil makin ketat (0.4–0.55)
+  FACE_API: "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/dist/face-api.js",
+  MODELS: "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/model/"
+};
+const TRIAL = !CONFIG.SUPABASE_URL;
+const DEF_CFG = { lat: null, lng: null, jamMasuk: "08:00", jamPulang: "17:00", bagian: ["Marketing", "Admin", "Finance", "Wardrobe", "Dekorasi", "Rias / MUA", "Gudang", "Driver", "Crew lapangan", "Office"] };
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const IC = { cam: '<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>', ck: '<svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg>', x: '<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>', gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>', user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>', pin: '<svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>', back: '<svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>', face: '<svg viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M9 10h.01M15 10h.01M9.5 15a3.5 3.5 0 0 0 5 0"/></svg>' };
+const BLN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"], HARI = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+const pad = n => String(n).padStart(2, "0");
+const todayIso = () => { const d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
+const hhmm = () => { const d = new Date(); return pad(d.getHours()) + ":" + pad(d.getMinutes()); };
+const longDate = () => { const d = new Date(); return HARI[d.getDay()] + ", " + d.getDate() + " " + BLN[d.getMonth()] + " " + d.getFullYear(); };
+const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const titleCase = s => s.trim().replace(/\s+/g, " ").toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase());
+function toast(m){ const t = $("toast"); t.textContent = m; t.classList.add("on"); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("on"), 3200); }
+
+/* ------------------------- penyimpanan ------------------------- */
+const LS = { staff: "yabsen-staff", log: "yabsen-log", cfg: "yabsen-cfg", photo: "yabsen-photo" };
+const lsGet = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { toast("Memori perangkat penuh"); return false; } };
+let sb = null;
+const Store = TRIAL ? {
+  async staff(){ return lsGet(LS.staff, []); },
+  async addStaff(s){ const L = lsGet(LS.staff, []); L.push(s); lsSet(LS.staff, L); },
+  async logsToday(sid){ return lsGet(LS.log, []).filter(l => l.staff_id === sid && l.date === todayIso()); },
+  async allLogs(){ return lsGet(LS.log, []); },
+  async addLog(l){ const L = lsGet(LS.log, []); L.push(l); lsSet(LS.log, L); },
+  async cfg(){ return Object.assign({}, DEF_CFG, lsGet(LS.cfg, {})); },
+  async saveCfg(c){ lsSet(LS.cfg, c); },
+  async selfie(id, dataUrl){ const P = lsGet(LS.photo, {}); P[id] = dataUrl; const k = Object.keys(P); while (k.length > 40) delete P[k.shift()]; lsSet(LS.photo, P); return "local:" + id; },
+  photo(url){ return url && url.startsWith("local:") ? lsGet(LS.photo, {})[url.slice(6)] : url; },
+  async reset(){ Object.values(LS).forEach(k => localStorage.removeItem(k)); }
+} : {
+  async call(action, body){ const r = await fetch(CONFIG.SUPABASE_URL + "/functions/v1/absen", { method: "POST", headers: { "Content-Type": "application/json", apikey: CONFIG.SUPABASE_ANON_KEY }, body: JSON.stringify(Object.assign({ action }, body || {})) });
+    let j = null; try { j = await r.json(); } catch (e) {} if (!r.ok || !j || j.error) throw new Error((j && j.error) || "Server tidak merespons"); return j; },
+  async init(){ const j = await this.call("boot"); this._boot = j; },
+  async staff(){ return (this._boot && this._boot.staff) || []; },
+  async cfg(){ const c = (this._boot && this._boot.cfg) || {}; return Object.assign({}, DEF_CFG, c, { lat: c.hasLoc ? 0 : null, lng: c.hasLoc ? 0 : null }); },
+  faces(){ return (this._boot && this._boot.faces) || 0; },
+  async saveCfg(){ throw new Error("Pengaturan diubah dari sistem utama"); }, async allLogs(){ return []; }, photo(url){ return url; }, async reset(){}
+};
+
+/* ------------------------- wajah (face-api) ------------------------- */
+let FA = null, faceReady = false, faceErr = "";
+function loadScript(src){ return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = () => rej(new Error("Gagal memuat " + src)); document.head.appendChild(s); }); }
+async function initFace(){
+  try { if (!window.faceapi) await loadScript(CONFIG.FACE_API); FA = window.faceapi;
+    await Promise.all([FA.nets.tinyFaceDetector.loadFromUri(CONFIG.MODELS), FA.nets.faceLandmark68Net.loadFromUri(CONFIG.MODELS), FA.nets.faceRecognitionNet.loadFromUri(CONFIG.MODELS)]);
+    faceReady = true; } catch (e) { faceErr = "Pengenalan wajah belum bisa dimuat (periksa internet). Gunakan absen manual."; console.warn(e); }
+}
+async function detect(video){ if (!faceReady) return null; const r = await FA.detectSingleFace(video, new FA.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: .5 })).withFaceLandmarks().withFaceDescriptor(); return r || null; }
+const dist = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) { const d = a[i] - b[i]; s += d * d; } return Math.sqrt(s); };
+function bestMatch(desc, staff){ let best = null, bd = 9, second = 9; staff.forEach(s => { const m = Math.min(...(s.face || []).map(f => dist(desc, f))); if (m < bd) { second = bd; bd = m; best = s; } else if (m < second) second = m; }); return best && bd < CONFIG.MATCH_THRESHOLD ? { s: best, d: bd } : null; }
+const pd = (p, q) => Math.hypot(p.x - q.x, p.y - q.y);
+function ear(eye){ return (pd(eye[1], eye[5]) + pd(eye[2], eye[4])) / (2 * pd(eye[0], eye[3]) || 1); }
+function eyesEar(lm){ return (ear(lm.getLeftEye()) + ear(lm.getRightEye())) / 2; }
+
+/* ------------------------- kamera, lokasi, foto ------------------------- */
+let stream = null;
+async function startCam(video){ if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error("Kamera tidak didukung di browser ini");
+  stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 640 } }, audio: false }).catch(e => { throw new Error(e.name === "NotAllowedError" ? "Akses kamera ditolak — izinkan kamera di browser" : "Kamera tidak bisa dibuka"); });
+  video.srcObject = stream; await video.play().catch(() => {}); }
+function stopCam(){ if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; }
+function snap(video){ const c = document.createElement("canvas"), w = 360, h = Math.round(w * (video.videoHeight || 480) / (video.videoWidth || 480)); c.width = w; c.height = h; const g = c.getContext("2d"); g.translate(w, 0); g.scale(-1, 1); g.drawImage(video, 0, 0, w, h); return c.toDataURL("image/jpeg", .6); }
+const getPos = () => new Promise((res, rej) => { if (!navigator.geolocation) return rej(new Error("Perangkat tidak mendukung lokasi")); navigator.geolocation.getCurrentPosition(p => res(p.coords), e => rej(new Error(e.code === 1 ? "Akses lokasi ditolak — izinkan lokasi di browser" : "Lokasi tidak terdeteksi — aktifkan GPS")), { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }); });
+function geoDist(a, b, c, d){ const R = 6371000, r = x => x * Math.PI / 180, dl = r(c - a), dg = r(d - b), h = Math.sin(dl / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(dg / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); }
+
+/* ------------------------- tampilan ------------------------- */
+let CFG = Object.assign({}, DEF_CFG), STAFF = [], loopOn = false, view = "home", backTimer = null;
+const header = () => '<div class="top"><img src="/absen/logo.png" alt=""><div class="t"><small>Absensi karyawan</small><b>Yannie Wedding Organizer</b></div><button class="icon-btn" id="btnSet" aria-label="Pengaturan">' + IC.gear + '</button></div>' + (TRIAL ? '<div class="trial">MODE UJI COBA · data tersimpan di perangkat ini</div>' : '');
+const clock = () => '<div class="clock"><b id="clk">' + hhmm() + '</b><span>' + longDate() + '</span><small>Masuk ' + esc(CFG.jamMasuk) + ' · Pulang ' + esc(CFG.jamPulang) + ' · radius ' + (CFG.radius || CONFIG.RADIUS_M) + ' m</small></div>';
+const camBox = (id) => '<div class="cam" id="camBox"><video id="' + id + '" playsinline muted></video><div class="ph" id="camPh">' + IC.face + 'Menyiapkan kamera…</div><div class="ring"><svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="48"/><circle class="fg" id="ringFg" cx="50" cy="50" r="48" stroke-dasharray="301.6" stroke-dashoffset="301.6"/></svg></div></div>';
+const ring = (p, st) => { const f = $("ringFg"); if (f) f.style.strokeDashoffset = 301.6 * (1 - Math.max(0, Math.min(1, p))); const b = $("camBox"); if (b) { b.classList.toggle("ok", st === "ok"); b.classList.toggle("bad", st === "bad"); } };
+const setStatus = (cls, b, s, who) => { const el = $("status"); if (!el) return; el.className = "status " + (cls || ""); el.innerHTML = '<b>' + b + '</b><span>' + (s || "") + '</span>' + (who ? '<div class="who">' + who + '</div>' : ''); };
+function go(v){ view = v; loopOn = false; stopCam(); clearTimeout(backTimer); render(); }
+
+async function render(){
+  const A = $("app");
+  if (view === "home") {
+    A.innerHTML = header() + clock() + camBox("vid") + '<div class="status" id="status"></div><div class="links"><button id="lnReg">' + IC.user + 'Daftar wajah baru</button><button id="lnMan">' + IC.cam + 'Absen manual</button></div><p class="foot">Lihat ke kamera dan kedipkan mata.<br>Wajah, foto &amp; lokasi hanya dipakai untuk rekap kehadiran internal.</p>';
+    bindCommon(); $("lnReg").onclick = () => go("reg"); $("lnMan").onclick = () => go("manual");
+    if (CFG.lat == null) { setStatus("warn", "Lokasi kantor belum diatur", TRIAL ? "Tekan ⚙ lalu atur lokasi kantor (PIN uji coba " + CONFIG.TRIAL_PIN + ")." : "Minta Owner mengatur lokasi kantor di sistem utama."); $("camPh").innerHTML = IC.pin + "Lokasi kantor belum diatur"; return; }
+    if (TRIAL ? !STAFF.length : !Store.faces()) { setStatus("", "Belum ada wajah terdaftar", "Tekan “Daftar wajah baru” untuk mendaftar pertama kali."); $("camPh").innerHTML = IC.user + "Belum ada wajah terdaftar"; return; }
+    runRecognize();
+  } else if (view === "reg") {
+    A.innerHTML = header() + '<div class="card"><h3>Daftar karyawan baru</h3><p>Isi data Anda, lalu rekam wajah beberapa detik. Cukup sekali — selanjutnya absen hanya dengan wajah.</p><div class="field"><label>Nama lengkap</label><input class="inp" id="rgName" autocomplete="name" placeholder="mis. Siti Rahmawati"></div><div class="field"><label>Bagian</label><select class="inp" id="rgBag"><option value="">— pilih bagian —</option>' + CFG.bagian.map(b => '<option>' + esc(b) + '</option>').join("") + '</select></div><div class="field"><label>No. HP (opsional)</label><input class="inp" id="rgHp" inputmode="tel" placeholder="08…"></div><div class="row"><button class="btn" id="rgBack">' + IC.back + 'Kembali</button><button class="btn gold" id="rgNext">Lanjut rekam wajah</button></div></div>';
+    bindCommon(); $("rgBack").onclick = () => go("home");
+    $("rgNext").onclick = () => { const n = titleCase($("rgName").value), b = $("rgBag").value; if (n.length < 3) return toast("Isi nama lengkap"); if (!b) return toast("Pilih bagian Anda"); if (STAFF.some(s => s.name.toLowerCase() === n.toLowerCase())) return toast("Nama sudah terdaftar — langsung absen saja"); regData = { name: n, bagian: b, phone: $("rgHp").value.trim() }; go("enroll"); };
+  } else if (view === "enroll") {
+    A.innerHTML = header() + '<div class="card" style="text-align:center"><h3>Rekam wajah · ' + esc(regData.name) + '</h3><p>Posisikan wajah di dalam lingkaran. Gerakkan kepala pelan-pelan ke kiri dan kanan sampai lingkaran penuh.</p></div><div style="margin-top:14px">' + camBox("vid") + '</div><div class="status" id="status"></div><div class="row" style="margin-top:6px"><button class="btn" id="enBack">' + IC.back + 'Batal</button></div>';
+    bindCommon(); $("enBack").onclick = () => go("home"); runEnroll();
+  } else if (view === "manual") {
+    A.innerHTML = header() + '<div class="card"><h3>Absen manual</h3><p>Dipakai bila wajah tidak terbaca. Absen manual ditandai untuk dicek admin.</p><div class="field"><label>Nama</label><select class="inp" id="mnWho"><option value="">— pilih nama —</option>' + STAFF.map(s => '<option value="' + s.id + '">' + esc(s.name) + ' · ' + esc(s.bagian) + '</option>').join("") + '</select></div></div><div style="margin-top:14px">' + camBox("vid") + '</div><div class="status" id="status"></div><div class="row"><button class="btn" id="mnBack">' + IC.back + 'Kembali</button><button class="btn gold" id="mnGo">' + IC.cam + 'Ambil selfie &amp; absen</button></div>';
+    bindCommon(); $("mnBack").onclick = () => go("home");
+    try { await startCam($("vid")); $("camPh").hidden = true; } catch (e) { setStatus("bad", "Kamera tidak aktif", e.message); }
+    $("mnGo").onclick = async () => { const s = STAFF.find(q => q.id === $("mnWho").value); if (!s) return toast("Pilih nama Anda dulu"); if (!stream) return toast("Kamera belum aktif"); const shot = snap($("vid")); await submit(s, shot, "manual"); };
+  } else if (view === "set") {
+    A.innerHTML = header() + (TRIAL && !setOk ? '<div class="card" style="text-align:center"><h3>Pengaturan uji coba</h3><p>Masukkan PIN pengaturan.</p><div class="pin">' + [0, 1, 2, 3].map(i => '<input inputmode="numeric" maxlength="1" data-p="' + i + '">').join("") + '</div><button class="btn" id="stBack" style="margin-top:8px">' + IC.back + 'Kembali</button></div>' : settingsHtml());
+    bindCommon(); bindSettings();
+  } else if (view === "done") { A.innerHTML = header() + doneHtml; bindCommon(); const b = $("dnBack"); if (b) b.onclick = () => go("home"); backTimer = setTimeout(() => { if (view === "done") go("home"); }, 9000); }
+}
+let regData = null, setOk = false, doneHtml = "", setTab = "lokasi";
+function bindCommon(){ const b = $("btnSet"); if (b) b.onclick = () => go("set"); }
+
+// pencocokan wajah: uji coba di perangkat, produksi di server (data wajah tidak pernah dikirim ke HP)
+let idCache = { at: 0, d: null, m: null };
+async function whoIs(desc){ if (TRIAL) return bestMatch(desc, STAFF);
+  const now = Date.now(); if (idCache.d && now - idCache.at < 1500 && dist(Array.from(desc), idCache.d) < .25) return idCache.m;
+  try { const j = await Store.call("identify", { desc: Array.from(desc).map(x => +x.toFixed(5)) }); idCache = { at: now, d: Array.from(desc), m: j.match ? { s: j.match } : null }; return idCache.m; } catch (e) { return idCache.m; } }
+async function runRecognize(){
+  const v = $("vid"); loopOn = true; let streak = null, n = 0, base = 0, blinked = false, closed = false, t0 = Date.now();
+  try { await startCam(v); $("camPh").hidden = true; } catch (e) { setStatus("bad", "Kamera tidak aktif", e.message); return; }
+  if (!faceReady) { setStatus("warn", faceErr ? "Pengenalan wajah tidak tersedia" : "Memuat pengenal wajah…", faceErr || "Mohon tunggu sebentar"); if (!faceErr) { const w = setInterval(() => { if (faceReady || faceErr) { clearInterval(w); if (view === "home") go("home"); } }, 400); } return; }
+  setStatus("", "Lihat ke kamera", "Wajah akan dikenali otomatis");
+  const tick = async () => { if (!loopOn || view !== "home") return;
+    try { const r = await detect(v);
+      if (!r) { streak = null; n = 0; ring(0); setStatus("", "Lihat ke kamera", "Wajah belum terdeteksi — dekatkan wajah ke lingkaran"); }
+      else { const m = await whoIs(r.descriptor), e = eyesEar(r.landmarks);
+        if (!m) { streak = null; n = 0; ring(.15, "bad"); setStatus("bad", "Wajah tidak dikenali", "Belum terdaftar? Tekan “Daftar wajah baru”."); }
+        else { if (streak !== m.s.id) { streak = m.s.id; n = 0; base = e; blinked = false; closed = false; t0 = Date.now(); } n++; base = Math.max(base * .97, e);
+          if (!closed && e < base * .72) closed = true; else if (closed && e > base * .88) blinked = true;
+          const who = '<em>' + esc(m.s.bagian) + '</em>';
+          if (n >= 3 && blinked) { loopOn = false; ring(1, "ok"); setStatus("ok", m.s.name, "Wajah terverifikasi · mengecek lokasi…", who); const shot = snap(v); return submit(m.s, shot, "wajah", Array.from(r.descriptor)); }
+          ring(Math.min(.85, .3 + n * .1), ""); setStatus("", m.s.name, Date.now() - t0 > 7000 ? "Kedipkan mata pelan-pelan…" : "Kedipkan mata untuk konfirmasi", who); } }
+    } catch (err) { console.warn(err); }
+    setTimeout(tick, 220); };
+  tick();
+}
+async function runEnroll(){
+  const v = $("vid"), S = []; let last = null; loopOn = true;
+  try { await startCam(v); $("camPh").hidden = true; } catch (e) { setStatus("bad", "Kamera tidak aktif", e.message); return; }
+  if (!faceReady) { setStatus("warn", faceErr ? "Pengenalan wajah tidak tersedia" : "Memuat pengenal wajah…", faceErr || "Mohon tunggu"); if (!faceErr) { const w = setInterval(() => { if (faceReady || faceErr) { clearInterval(w); if (view === "enroll") go("enroll"); } }, 400); } return; }
+  setStatus("", "Lihat ke kamera", "Merekam 0 dari 6");
+  const tick = async () => { if (!loopOn || view !== "enroll") return;
+    try { const r = await detect(v);
+      if (r && r.detection.score > .6) { const d = Array.from(r.descriptor); if (!last || dist(d, last) > .06) { S.push(d.map(x => +x.toFixed(5))); last = d; } ring(S.length / 6, ""); setStatus("", "Bagus, terus gerakkan kepala pelan-pelan", "Merekam " + S.length + " dari 6"); }
+      else setStatus("", "Wajah belum terdeteksi", "Pastikan wajah terang & di dalam lingkaran · " + S.length + " dari 6");
+      if (S.length >= 6 && !TRIAL) { loopOn = false; ring(1, "ok"); setStatus("", "Menyimpan wajah…", "Mengecek lokasi kantor");
+        let p; try { p = await getPos(); } catch (e) { return fail("Lokasi tidak terdeteksi", e.message); }
+        let j; try { j = await Store.call("enroll", { name: regData.name, bagian: regData.bagian, phone: regData.phone, faces: S, lat: p.latitude, lng: p.longitude, acc: p.accuracy }); } catch (e) { return fail("Gagal menyimpan", e.message); }
+        if (!j.ok) return fail(j.title, j.msg); await boot();
+        doneHtml = '<div class="card res ok"><div class="ic">' + IC.ck + '</div><b>Wajah terdaftar</b><span class="nm">' + esc(j.staff.name) + '</span><small>' + esc(j.staff.bagian) + '<br>Mulai sekarang cukup lihat ke kamera untuk absen.</small><div class="row" style="margin-top:16px"><button class="btn gold" id="dnBack">Absen sekarang</button></div></div>'; go("done"); return; }
+      if (S.length >= 6) { loopOn = false; ring(1, "ok"); const dup = bestMatch(S[0], STAFF); if (dup) { setStatus("bad", "Wajah sudah terdaftar", "Terdaftar atas nama " + dup.s.name + ". Silakan absen langsung."); setTimeout(() => go("home"), 3500); return; }
+        const s = { id: uid("st"), name: regData.name, bagian: regData.bagian, phone: regData.phone, face: S, created_at: new Date().toISOString() };
+        try { await Store.addStaff(s); STAFF.push(s); setStatus("ok", "Pendaftaran berhasil", s.name + " · " + s.bagian); doneHtml = '<div class="card res ok"><div class="ic">' + IC.ck + '</div><b>Wajah terdaftar</b><span class="nm">' + esc(s.name) + '</span><small>' + esc(s.bagian) + '<br>Mulai sekarang cukup lihat ke kamera untuk absen.</small><div class="row" style="margin-top:16px"><button class="btn gold" id="dnBack">Absen sekarang</button></div></div>'; go("done"); }
+        catch (e) { setStatus("bad", "Gagal menyimpan", e.message || "Periksa koneksi"); } return; }
+    } catch (err) { console.warn(err); }
+    setTimeout(tick, 260); };
+  tick();
+}
+async function submit(s, shot, method, desc){
+  if (!TRIAL) { setStatus("", s.name, "Mengecek lokasi…", '<em>' + esc(s.bagian) + '</em>');
+    let p; try { p = await getPos(); } catch (e) { return fail("Lokasi tidak terdeteksi", e.message); }
+    let j; try { j = await Store.call("absen", { method, sid: s.id, desc: desc ? desc.map(x => +x.toFixed(5)) : undefined, lat: p.latitude, lng: p.longitude, acc: p.accuracy, selfie: shot }); } catch (e) { return fail("Gagal mengirim absen", e.message || "Periksa koneksi internet lalu coba lagi"); }
+    if (!j.ok) return fail(j.title, j.msg, j.done);
+    const r = j.rec; stopCam(); loopOn = false;
+    doneHtml = '<div class="card res ok"><div class="ic">' + IC.ck + '</div><b>Absen ' + r.type + ' berhasil</b><span class="nm">' + esc(r.name) + '</span><small>' + esc(r.bagian) + ' · ' + r.time + ' WIB · ' + r.dist + ' m dari kantor</small><img class="sf" src="' + shot + '" alt="">' + (r.late ? '<span class="tag late">Terlambat · jam masuk ' + esc(j.cfg.jamMasuk) + '</span>' : r.early ? '<span class="tag late">Pulang lebih awal</span>' : '<span class="tag on">Tepat waktu</span>') + (r.method === "manual" ? '<small>Absen manual — akan dicek admin.</small>' : '') + '<div class="row" style="margin-top:16px"><button class="btn" id="dnBack">Selesai</button></div></div>';
+    return go("done"); }
+  setStatus("", s.name, "Mengecek lokasi…", '<em>' + esc(s.bagian) + '</em>');
+  let p; try { p = await getPos(); } catch (e) { return fail("Lokasi tidak terdeteksi", e.message); }
+  const dm = geoDist(CFG.lat, CFG.lng, p.latitude, p.longitude);
+  if (dm > (CFG.radius || CONFIG.RADIUS_M)) return fail("Absen ditolak — di luar radius kantor", s.name + ", posisi Anda " + Math.round(dm) + " m dari kantor (maksimal " + (CFG.radius || CONFIG.RADIUS_M) + " m)." + (p.accuracy > 30 ? " Akurasi GPS ±" + Math.round(p.accuracy) + " m." : ""));
+  let today = []; try { today = await Store.logsToday(s.id); } catch (e) {}
+  const type = !today.some(l => l.type === "masuk") ? "masuk" : !today.some(l => l.type === "pulang") ? "pulang" : null;
+  if (!type) return fail("Absen hari ini sudah lengkap", s.name + " sudah absen masuk & pulang hari ini.", true);
+  const tm = hhmm(), id = uid("ab"), late = type === "masuk" && tm > CFG.jamMasuk, early = type === "pulang" && tm < CFG.jamPulang;
+  try { const url = await Store.selfie(id, shot);
+    await Store.addLog({ id, staff_id: s.id, name: s.name, bagian: s.bagian, date: todayIso(), type, time: tm, ts: new Date().toISOString(), lat: +p.latitude.toFixed(6), lng: +p.longitude.toFixed(6), acc: Math.round(p.accuracy || 0), dist: Math.round(dm), method, selfie: url, late, early });
+  } catch (e) { return fail("Gagal mengirim absen", (e && e.message) || "Periksa koneksi internet lalu coba lagi"); }
+  stopCam(); loopOn = false;
+  doneHtml = '<div class="card res ok"><div class="ic">' + IC.ck + '</div><b>Absen ' + type + ' berhasil</b><span class="nm">' + esc(s.name) + '</span><small>' + esc(s.bagian) + ' · ' + tm + ' · ' + Math.round(dm) + ' m dari kantor</small><img class="sf" src="' + shot + '" alt="">' + (late ? '<span class="tag late">Terlambat · jam masuk ' + esc(CFG.jamMasuk) + '</span>' : early ? '<span class="tag late">Pulang lebih awal</span>' : '<span class="tag on">Tepat waktu</span>') + (method === "manual" ? '<small>Absen manual — akan dicek admin.</small>' : '') + '<div class="row" style="margin-top:16px"><button class="btn" id="dnBack">Selesai</button></div></div>';
+  go("done");
+}
+function fail(t, m, info){ stopCam(); loopOn = false; doneHtml = '<div class="card res ' + (info ? "ok" : "bad") + '"><div class="ic">' + (info ? IC.ck : IC.x) + '</div><b>' + esc(t) + '</b><small>' + esc(m) + '</small><div class="row" style="margin-top:16px"><button class="btn gold" id="dnBack">Coba lagi</button></div></div>'; go("done"); }
+
+/* ------------------------- pengaturan (uji coba) ------------------------- */
+function settingsHtml(){
+  if (!TRIAL) return '<div class="card"><h3>Pengaturan</h3><p>Lokasi kantor, jam kerja, dan daftar bagian diatur oleh Owner dari sistem utama (modul Absensi).</p><div class="row"><button class="btn" id="stBack">' + IC.back + 'Kembali</button></div></div>';
+  return '<div class="card"><h3>Pengaturan uji coba</h3><div class="seg">' + [["lokasi", "Lokasi & jam"], ["data", "Data uji coba"]].map(t => '<button data-st="' + t[0] + '" class="' + (setTab === t[0] ? "on" : "") + '">' + t[1] + '</button>').join("") + '</div>' +
+    (setTab === "lokasi" ? '<p>' + (CFG.lat != null ? "Lokasi kantor: <b>" + (+CFG.lat).toFixed(6) + ", " + (+CFG.lng).toFixed(6) + "</b>" : "Lokasi kantor belum diatur.") + '</p><button class="btn gold" id="stHere" style="width:100%">' + IC.pin + 'Gunakan lokasi saya sekarang</button><p class="hint">Lakukan saat berada di dalam kantor. Absen ditolak bila lebih dari ' + (CFG.radius || CONFIG.RADIUS_M) + ' m dari titik ini.</p>' +
+      '<div class="row" style="margin-top:12px"><div class="field" style="flex:1"><label>Jam masuk</label><input class="inp" id="stJm" value="' + esc(CFG.jamMasuk) + '" inputmode="numeric" maxlength="5"></div><div class="field" style="flex:1"><label>Jam pulang</label><input class="inp" id="stJp" value="' + esc(CFG.jamPulang) + '" inputmode="numeric" maxlength="5"></div></div><div class="field"><label>Daftar bagian (pisahkan koma)</label><input class="inp" id="stBag" value="' + esc(CFG.bagian.join(", ")) + '"></div><div class="row"><button class="btn" id="stBack">' + IC.back + 'Kembali</button><button class="btn gold" id="stSave">' + IC.ck + 'Simpan</button></div>'
+    : '<div id="stData"><p>Memuat…</p></div><div class="row" style="margin-top:12px"><button class="btn" id="stBack">' + IC.back + 'Kembali</button><button class="btn" id="stReset" style="color:var(--red)">Hapus semua data uji coba</button></div>') + '</div>';
+}
+function bindSettings(){
+  const back = $("stBack"); if (back) back.onclick = () => go("home");
+  document.querySelectorAll("[data-p]").forEach((el, i, all) => { el.oninput = () => { el.value = el.value.replace(/\D/g, ""); if (el.value && all[i + 1]) all[i + 1].focus(); const pin = Array.from(all).map(x => x.value).join(""); if (pin.length === 4) { if (pin === CONFIG.TRIAL_PIN) { setOk = true; render(); } else { toast("PIN salah"); all.forEach(x => x.value = ""); all[0].focus(); } } }; if (i === 0) setTimeout(() => el.focus(), 50); });
+  document.querySelectorAll("[data-st]").forEach(b => b.onclick = () => { setTab = b.dataset.st; render(); });
+  if ($("stHere")) $("stHere").onclick = async () => { const b = $("stHere"); b.disabled = true; try { const p = await getPos(); CFG.lat = +p.latitude.toFixed(6); CFG.lng = +p.longitude.toFixed(6); await Store.saveCfg(CFG); toast("Lokasi kantor disimpan (akurasi ±" + Math.round(p.accuracy) + " m)"); render(); } catch (e) { toast(e.message); b.disabled = false; } };
+  if ($("stSave")) $("stSave").onclick = async () => { const hm = v => { const m = /^(\d{1,2})[:.](\d{2})$/.exec(v.trim()); return m && +m[1] < 24 && +m[2] < 60 ? pad(+m[1]) + ":" + m[2] : null; }; const a = hm($("stJm").value), b = hm($("stJp").value); if (!a || !b) return toast("Format jam 24 jam, mis. 08:00");
+    CFG.jamMasuk = a; CFG.jamPulang = b; CFG.bagian = $("stBag").value.split(",").map(x => x.trim()).filter(Boolean); await Store.saveCfg(CFG); toast("Pengaturan disimpan"); go("home"); };
+  if ($("stReset")) $("stReset").onclick = async () => { if (!confirm("Hapus semua karyawan, wajah, dan absen uji coba di perangkat ini?")) return; const keep = { lat: CFG.lat, lng: CFG.lng }; await Store.reset(); await Store.saveCfg(Object.assign({}, DEF_CFG, keep)); await boot(); toast("Data uji coba dihapus"); go("home"); };
+  if ($("stData")) (async () => { const L = (await Store.allLogs()).slice().reverse();
+    $("stData").innerHTML = '<p><b>' + STAFF.length + '</b> karyawan terdaftar · <b>' + L.length + '</b> catatan absen</p><div class="list">' + (L.length ? L.slice(0, 60).map(l => '<div class="li"><img src="' + (Store.photo(l.selfie) || "") + '" alt=""><span><b>' + esc(l.name) + '</b><small>' + esc(l.bagian) + ' · ' + l.date + ' · ' + l.dist + ' m · ' + (l.method === "manual" ? "manual" : "wajah") + '</small></span><em>' + (l.type === "masuk" ? "Masuk" : "Pulang") + ' ' + l.time + (l.late ? " · telat" : "") + '</em></div>').join("") : '<p class="hint">Belum ada absen.</p>') + '</div>'; })();
+}
+
+/* ------------------------- mulai ------------------------- */
+async function boot(){ try { if (!TRIAL) await Store.init(); CFG = await Store.cfg(); STAFF = await Store.staff(); } catch (e) { toast("Gagal terhubung ke server: " + (e.message || e)); } }
+setInterval(() => { const c = $("clk"); if (c) c.textContent = hhmm(); }, 5000);
+if (!TRIAL) setInterval(() => { if (view === "home" && !document.hidden) boot(); }, 120000);
+document.addEventListener("visibilitychange", () => { if (document.hidden) { loopOn = false; stopCam(); } else if (view === "home" || view === "enroll") render(); });
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("/absen/sw.js", { scope: "/absen/" }).catch(() => {});
+(async () => { $("app").innerHTML = header() + clock() + '<div class="status"><b>Menyiapkan…</b><span>Memuat data &amp; pengenal wajah</span></div>'; bindCommon(); await boot(); initFace(); render(); })();
+</script>
+</body>
+</html>

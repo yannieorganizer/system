@@ -1,0 +1,26 @@
+{
+  "name": "Absensi Yannie Wedding Organizer",
+  "short_name": "Absen Yannie",
+  "description": "Absensi karyawan dengan pengenalan wajah dan radius lokasi kantor",
+  "start_url": "/absen/",
+  "scope": "/absen/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F7F3E8",
+  "theme_color": "#F7F3E8",
+  "icons": [
+    {
+      "src": "/absen/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/absen/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "id": "/absen/"
+}
