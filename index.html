@@ -3806,7 +3806,7 @@
     }
   }
   document.querySelectorAll("#view-login [data-role]").forEach(b => b.addEventListener("click", () => showPin(b.dataset.role)));
-  if ($("lgAbsen")) $("lgAbsen").addEventListener("click", () => { location.hash = "absen"; });
+  if ($("lgAbsen")) $("lgAbsen").addEventListener("click", () => { if (SUPA_ON) { location.href = "/absen/"; return; } location.hash = "absen"; });
   // ---- cincin emas 3D realistis (WebGL murni) ----
   function initRing3D(host){
     const cv = document.createElement("canvas"); cv.className = "lx-gl"; host.appendChild(cv);
@@ -3968,6 +3968,7 @@
   function route(){
     const h = (location.hash || "").slice(1), role = getRole();
     document.querySelectorAll(".notif.open").forEach(n => n.classList.remove("open"));
+    if (SUPA_ON && h === "absen") { location.replace("/absen/"); return; }
     if (SUPA_ON && !supaAuthed) { setView("login"); showDeviceStep(true); return; }
     document.body.dataset.kiosk = h === "absen" ? "1" : "";
     if (h === "absen") { renderAbsenKiosk(); setView("app"); return; }
@@ -6486,7 +6487,8 @@
     const role = getRole(), C = data.absenCfg, t0 = todayIso(), S = staffList(), T = Object.values(data.absen).filter(a => a.date === t0).sort((a, b) => (b.time || "").localeCompare(a.time || ""));
     const inToday = new Set(T.filter(a => a.type === "masuk").map(a => a.sid)), lateToday = T.filter(a => a.type === "masuk" && a.late).length;
     const [Y, M] = abMonth.split("-").map(Number);
-    let h = backBtn("beranda", "Beranda") + '<section class="tx-top"><div><div class="hm-kicker">Database absensi</div><h2>Absensi Karyawan</h2><p>Absen lewat foto selfie dengan verifikasi radius ' + (C.radius || 50) + ' m dari kantor. Rekap bulanan otomatis dan bisa diunduh ke Excel.</p></div><div class="tx-top-acts"><button class="btn ghost" id="abOpenK">' + DK_IC.cam + 'Buka halaman absen</button></div></section>' +
+    let h = backBtn("beranda", "Beranda") + '<section class="tx-top"><div><div class="hm-kicker">Database absensi</div><h2>Absensi Karyawan</h2><p>Absen dengan pengenalan wajah otomatis &amp; verifikasi radius ' + (C.radius || 50) + ' m dari kantor. Rekap bulanan otomatis dan bisa diunduh ke Excel.</p></div><div class="tx-top-acts">' + (SUPA_ON ? '<button class="btn gold" id="abCopy">' + svgI('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>') + 'Salin link absen</button>' : '') + '<button class="btn ghost" id="abOpenK">' + DK_IC.cam + 'Buka halaman absen</button></div></section>' +
+      (SUPA_ON ? '<section class="pnotif info"><span class="pn-ic">' + DK_IC.cam + '</span><div class="pn-tx"><b>Link absen karyawan: ' + esc(location.origin) + '/absen</b><p>Bagikan ke karyawan (WhatsApp). Pertama kali: daftar wajah <b>di kantor</b>. Selanjutnya cukup buka link, lihat ke kamera &amp; kedipkan mata — nama &amp; bagian dikenali otomatis, lokasi dicek maksimal ' + (C.radius || 50) + ' m dari kantor, dan data langsung masuk ke sini secara realtime.</p></div></section>' : '') +
       (C.lat == null ? '<section class="pnotif warn bad"><span class="pn-ic">' + DK_IC.warn + '</span><div class="pn-tx"><b>Titik lokasi kantor belum diatur</b><p>Karyawan belum bisa absen. Buka tab <b>Pengaturan</b> saat berada di kantor lalu klik <b>Gunakan lokasi saya sekarang</b>.</p></div></section>' : '') +
       '<section class="hm-kpis"><div class="kpi-card"><small>Karyawan terdaftar</small><b>' + S.length + '</b><span>' + (C.bagian || []).length + ' bagian</span></div><div class="kpi-card"><small>Hadir hari ini</small><b>' + inToday.size + '</b><span>dari ' + S.length + ' karyawan</span></div><div class="kpi-card' + (lateToday ? " warn" : "") + '"><small>Terlambat hari ini</small><b>' + lateToday + '</b><span>masuk lewat ' + esc(C.jamMasuk) + '</span></div><div class="kpi-card"><small>Belum absen</small><b>' + Math.max(0, S.length - inToday.size) + '</b><span>' + (AB_LIBUR.includes(new Date().getDay()) ? "hari libur" : "hari kerja") + '</span></div></section>' +
       '<div class="seg big dk-tabs">' + [["rekap", "Rekap bulanan"], ["hari", "Hari ini"], ["staff", "Karyawan"], ["set", "Pengaturan"]].map(t => '<button type="button" data-abt="' + t[0] + '" class="' + (abTab === t[0] ? "on" : "") + '">' + t[1] + '</button>').join("") + '</div>';
@@ -6506,7 +6508,8 @@
       '<section class="card tx-sec"><h4>Link absensi untuk karyawan</h4><p class="dk-hint">Karyawan membuka sistem lalu menekan <b>Absensi karyawan</b> di halaman masuk (tanpa PIN), atau langsung ke alamat yang diakhiri <b>#absen</b>. Bisa dipakai di HP masing-masing atau 1 HP di kantor.</p></section>';
     $("apMain").innerHTML = h; dkLoadPhotos($("apMain"));
     $("apMain").querySelectorAll("[data-abt]").forEach(b => b.onclick = () => { abTab = b.dataset.abt; renderAbsensi(); });
-    $("abOpenK").onclick = () => { abStep = "pick"; abMsg = null; location.hash = "absen"; };
+    $("abOpenK").onclick = () => { if (SUPA_ON) { window.open("/absen/", "_blank"); return; } abStep = "pick"; abMsg = null; location.hash = "absen"; };
+    if ($("abCopy")) $("abCopy").onclick = async () => { const u = location.origin + "/absen"; try { await navigator.clipboard.writeText(u); toast("Link absen disalin ✓"); } catch (e) { prompt("Salin link absen:", u); } };
     $("apMain").querySelectorAll("[data-mv]").forEach(b => b.onclick = () => { const d = new Date(Y, M - 1 + (+b.dataset.mv), 1); abMonth = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); renderAbsensi(); });
     if ($("abXls")) $("abXls").onclick = () => { const MD = abMonthData(abMonth);
       const rows = [{ s: 1, cells: ["Nama", "Bagian"].concat(MD.days.map(D => String(D.d)), ["Hadir", "Telat", "Alpa"]) }].concat(MD.rows.map(r => ({ s: 0, cells: [r.s.name, r.s.bagian || ""].concat(r.cells.map(c => c.m ? c.m.time + (c.p ? "-" + c.p.time : "") + (c.m.late ? " T" : "") : c.D.off ? "Libur" : ""), [String(r.hadir), String(r.telat), String(r.alpa)]) })));
