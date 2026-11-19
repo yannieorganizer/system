@@ -4095,7 +4095,7 @@
   document.addEventListener("keydown", e => { if (e.key === "Escape" && $("recapModal").classList.contains("open")) closeRF(); });
   // =================== KONEKSI SUPABASE (dipakai saat di-hosting di Vercel) ===================
   // Isi 2 nilai di bawah dari Supabase → Project Settings → API. Kosongkan bila memakai penyimpanan Claude.
-  const SUPA = { url: "", key: "" };
+  const SUPA = { url: "https://seglzvepigjluylbosrg.supabase.co", key: "sb_publishable_6w5j4nHe_7xVVwVx6SoKHg_YLnZJunr" };
   const SUPA_ON = !!(SUPA.url && SUPA.key);
   let supa = null, supaAuthed = false;
   const ALL_COLLS = ["templates", "events", "transactions", "proofs", "cash", "cashcfg", "busana", "dekor", "dekorfoto", "venues", "staff", "absen", "absencfg", "akses", "uicfg"];
