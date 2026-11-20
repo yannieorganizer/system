@@ -3242,6 +3242,10 @@
   const TX_ACR = new Set(["GOR","KUA","TNI","POLRI","PT","CV","RT","RW","BSD","MUA","TM","DP","BCA","BRI","BNI","BTN","BSI","PLN","RS","RSUD","SMA","SMK","SMP","SD","UI","ITB","IPB","UIN","LED","VIP","VVIP","MC","AC","HT","DKI","PKK","KUD","BPJS","II","III","IV","VI","VII","VIII","IX","XI","XII","CPP","CPW","STTD","KM","SPBU","KFC","BUMN","UMKM","GSG","ATM","WO","IG"]);
   const TX_UNIT = new Set(["m", "cm", "mm", "kg", "gr", "pcs", "lt", "m2", "m²"]);
   function textCase(str){ const s = String(str == null ? "" : str).replace(/[ \t]+/g, " ").trim(); if (!s) return s;
+    const pm = s.match(/^add[\s-]*on\s*:\s*/i); if (pm) return "Add-on: " + textCase(s.slice(pm[0].length));
+    if (/\s[—–|:]\s|:\s|,\s/.test(s)) { const parts = s.split(/(\s[—–|]\s|:\s|,\s)/); let out = "";
+      for (let i = 0; i < parts.length; i++) out += i % 2 ? parts[i] : (i ? textCase(parts[i]).replace(/^([a-z])/, (m, c) => (/:\s$/.test(parts[i - 1]) || /\s[—–|]\s/.test(parts[i - 1])) ? c.toUpperCase() : c) : textCase(parts[i]));
+      return out; }
     const L = s.replace(/[^A-Za-z]/g, ""), allUp = L.length > 1 && L === L.toUpperCase(); let first = true;
     return s.split(" ").map(w => { const isFirst = first; if (/[A-Za-z]/.test(w)) first = false;
       const core = w.replace(/[^A-Za-z]/g, ""); if (!core) return w;
@@ -3260,7 +3264,7 @@
     if (o.venueBooking && o.venueBooking.venue) o.venueBooking.venue = textCase(o.venueBooking.venue);
     (o.addons || []).forEach(a => { if (a && a.name) a.name = textCase(a.name); });
     (o.vendors || []).forEach(v => { if (v && v.name) v.name = textCase(v.name); });
-    if (o.invoice) { (o.invoice.items || []).forEach(i => { if (i && i.desc) i.desc = textCase(i.desc); }); const c = o.invoice.catering; if (c && c.items) c.items.forEach(i => { if (i && i.name) i.name = textCase(i.name); });
+    if (o.invoice) { (o.invoice.items || []).forEach(i => { if (i && i.desc) { let d = textCase(i.desc); const m = d.match(/\s—\s(\d[\d.]*)\s*pax$/i); if (m && new RegExp("\\b" + m[1].replace(/\./g, "\\.") + "\\s*pax\\b", "i").test(d.slice(0, m.index))) d = d.slice(0, m.index); i.desc = d; } }); const c = o.invoice.catering; if (c && c.items) c.items.forEach(i => { if (i && i.name) i.name = textCase(i.name); });
       if (sig0 && o.invoice.sig === sig0) o.invoice.sig = sigF(o); }
     return o; }
   const nmSig = x => JSON.stringify([x.cpp, x.cpw, x.signer && x.signer.pob, x.packageName, x.venue, x.client, x.address, x.custom, x.venueBooking, x.addons, x.vendors, x.invoice]);
@@ -4981,9 +4985,9 @@
     if (ci && ci.length) { const by = {}; ci.forEach(c => { const k = c.kind || "Buffet"; (by[k] = by[k] || []).push(c.name.trim() + (c.qty ? " " + c.qty : "")); });
       if (by.Buffet) scope.push("Catering " + (cat.pax ? fmt(cat.pax) + " pax " : "") + "berupa: " + by.Buffet.join(", "));
       Object.keys(by).filter(k => k !== "Buffet").forEach(k => scope.push((k === "After Akad" ? "Menu After Akad" : k) + ": " + by[k].join(", "))); }
-    (x.addons || []).filter(a => (a.name || "").trim()).forEach(a => scope.push(a.name.trim() + (addQ(a).qty > 1 ? " (" + fmt(addQ(a).qty) + " x " + rp(addQ(a).unit) + ")" : "")));
-    if (x.invoice && (x.invoice.items || []).length) x.invoice.items.forEach(it => { const nm = (it.desc || "").trim(); if (nm && !scope.some(s0 => s0.toLowerCase().includes(nm.toLowerCase())) && !/^wedding package|^paket/i.test(nm)) scope.push(nm); });
-    scope.forEach((v, k) => item(String.fromCharCode(97 + (k % 26)) + ".", v, ML + 20, { ind: 18, gap: 0 }));
+    (x.addons || []).filter(a => (a.name || "").trim()).forEach(a => scope.push(textCase(a.name) + (addQ(a).qty > 1 ? " (" + fmt(addQ(a).qty) + " x " + rp(addQ(a).unit) + ")" : "")));
+    if (x.invoice && (x.invoice.items || []).length) x.invoice.items.forEach(it => { if (it.auto === "add") return; const nm = textCase((it.desc || "").trim().replace(/^add[\s-]*on\s*:\s*/i, "")); if (nm && !scope.some(s0 => s0.toLowerCase().includes(nm.toLowerCase())) && !/^wedding package|^paket/i.test(nm)) scope.push(nm); });
+    scope.forEach((v, k) => item((k >= 26 ? String.fromCharCode(96 + Math.floor(k / 26)) : "") + String.fromCharCode(97 + (k % 26)) + ".", v, ML + 20, { ind: 18, gap: 0 }));
     y += 2;
     item("2.", "Ketentuan penambahan layanan di luar surat perjanjian ini yang disetujui kedua pihak akan dibuat dalam dokumen tambahan.", ML);
     // ---- Pasal 4 ----
@@ -6913,7 +6917,7 @@
     return pre + String(max + 1).padStart(3, "0");
   }
   function autoInvItems(x){
-    return [{ id: uid("ii"), desc: trxPkgLabel(x) + (x.pax ? " — " + x.pax + " pax" : ""), qty: 1, price: +x.price || 0, auto: "pkg" }]
+    return [{ id: uid("ii"), desc: trxPkgLabel(x) + (x.pax && !new RegExp("\\b" + x.pax + "\\s*pax", "i").test(trxPkgLabel(x)) ? " — " + x.pax + " pax" : ""), qty: 1, price: +x.price || 0, auto: "pkg" }]
       .concat((x.addons || []).map(a => { const q = addQ(a); return { id: uid("ii"), desc: "Add-on: " + (a.name || "-"), qty: q.qty, price: q.unit, auto: "add" }; }));
   }
   function autoCatering(x){ return { pax: trxPax(x), items: stdCatering(trxPax(x)), note: "" }; }
