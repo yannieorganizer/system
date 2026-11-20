@@ -60,6 +60,14 @@
   .shbar button{border:0;background:none;color:var(--gold);font:inherit;font-weight:600;cursor:pointer}
   .live{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);margin-top:4px}
   [hidden]{display:none!important}
+  .links .lsep{width:1px;height:16px;background:var(--line);align-self:center}
+  .pick .sub{text-align:center;color:var(--muted);font-size:13px;margin:-4px auto 14px;max-width:340px;line-height:1.5}
+  .shp.big.off button span{font-size:40px} .shp.big button.on{background:#342B1C;border-color:#342B1C} .shp.big button.on b,.shp.big button.on span,.shp.big button.on small{color:#FDFBF6}
+  .off-note{margin-top:14px} .pick .row{margin-top:14px} .btn:disabled{opacity:.45;pointer-events:none}
+  .shbar.off.izin{background:#eef2fb;border-color:#cbd7f2} .shbar.off.sakit{background:#fbf1ea;border-color:#f1d2bf}
+  .links{flex-wrap:wrap;justify-content:center;column-gap:22px;row-gap:4px} .links .lsep{display:none}
+  .shbar.off.tm{background:#f6efe2;border-color:#e6d3ae}
+  .tag.iz{background:#e8eefb;color:#3b5bab} .tag.sk{background:#fbeee6;color:#b2552a}
 </style>
 </head>
 <body>
@@ -85,9 +93,11 @@ const TRIAL = !CONFIG.SUPABASE_URL;
 const DEF_CFG = { lat: null, lng: null, jamMasuk: "08:00", jamPulang: "16:00", shifts: [{ id: "s1", nama: "Shift 1", masuk: "08:00", pulang: "16:00" }, { id: "s2", nama: "Shift 2", masuk: "12:00", pulang: "20:30" }] };
 const shiftOf = s => (CFG.shifts || DEF_CFG.shifts).find(x => x.id === (s && s.shift)) || (CFG.shifts || DEF_CFG.shifts)[0];
 const shTag = s => (s && s.shiftNama) || shiftOf(s).nama;
+const OFF_LBL = { izin: "Izin", sakit: "Sakit" };
+const curTag = s => tmMode ? "Pulang di TM · " + shTag(s) : offKind ? OFF_LBL[offKind] + " · " + shTag(s) : shTag({ shift: curShift });
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const IC = { cam: '<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>', ck: '<svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg>', x: '<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>', gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>', user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>', pin: '<svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>', back: '<svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>', face: '<svg viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M9 10h.01M15 10h.01M9.5 15a3.5 3.5 0 0 0 5 0"/></svg>' };
+const IC = { off: '<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M10 14l4 4M14 14l-4 4"/></svg>', cam: '<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>', ck: '<svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg>', x: '<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>', gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>', user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>', pin: '<svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>', back: '<svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>', face: '<svg viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M9 10h.01M15 10h.01M9.5 15a3.5 3.5 0 0 0 5 0"/></svg>' };
 const BLN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"], HARI = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 const pad = n => String(n).padStart(2, "0");
 const todayIso = () => { const d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
@@ -162,13 +172,22 @@ function go(v){ view = v; loopOn = false; stopCam(); clearTimeout(backTimer); re
 async function render(){
   const A = $("app");
   if (view === "home") {
-    A.innerHTML = header() + clock() + '<div class="pick"><h3>Pilih shift Anda hari ini</h3><div class="shp big">' + (CFG.shifts || DEF_CFG.shifts).map(x => '<button type="button" data-sh="' + x.id + '"><b>' + esc(x.nama) + '</b><span>' + x.masuk + '</span><small>sampai ' + x.pulang + '</small></button>').join("") + '</div></div><div class="links"><button id="lnReg">' + IC.user + 'Daftar wajah baru</button></div><p class="foot">Setelah memilih shift, lihat ke kamera untuk absen.<br>Wajah, foto &amp; lokasi hanya dipakai untuk rekap kehadiran internal.</p>';
-    bindCommon(); $("lnReg").onclick = () => go("reg");
+    A.innerHTML = header() + clock() + '<div class="pick"><h3>Pilih shift Anda hari ini</h3><div class="shp big">' + (CFG.shifts || DEF_CFG.shifts).map(x => '<button type="button" data-sh="' + x.id + '"><b>' + esc(x.nama) + '</b><span>' + x.masuk + '</span><small>sampai ' + x.pulang + '</small></button>').join("") + '</div></div><div class="links"><button id="lnReg">' + IC.user + 'Daftar wajah baru</button><i class="lsep"></i><button id="lnOff">' + IC.off + 'Tidak masuk?</button><i class="lsep"></i><button id="lnTm">' + IC.pin + 'Pulang di TM?</button></div><p class="foot">Setelah memilih shift, lihat ke kamera untuk absen.<br>Wajah, foto &amp; lokasi hanya dipakai untuk rekap kehadiran internal.</p>';
+    offKind = ""; offNote = ""; tmMode = false;
+    bindCommon(); $("lnReg").onclick = () => go("reg"); $("lnOff").onclick = () => go("off"); $("lnTm").onclick = () => { tmMode = true; offKind = ""; go("scan"); };
     document.querySelectorAll(".shp.big [data-sh]").forEach(b => b.onclick = () => { curShift = b.dataset.sh; go("scan"); });
+  } else if (view === "off") {
+    A.innerHTML = header() + clock() + '<div class="pick"><h3>Tidak masuk hari ini?</h3><p class="sub">Pilih alasan, lalu verifikasi wajah. Data langsung tercatat di rekap absensi.</p><div class="shp big off">' + [["izin", "Izin", "keperluan pribadi / keluarga"], ["sakit", "Sakit", "sedang tidak enak badan"]].map(o => '<button type="button" data-off="' + o[0] + '"' + (offKind === o[0] ? ' class="on"' : '') + '><b>' + o[1] + '</b><span>' + (o[0] === "sakit" ? "S" : "I") + '</span><small>' + o[2] + '</small></button>').join("") + '</div>' +
+      '<div class="field off-note"><label>Keterangan (opsional)</label><input class="inp" id="offNote" maxlength="160" placeholder="mis. demam, acara keluarga" value="' + esc(offNote) + '"></div>' +
+      '<div class="row"><button class="btn" id="offBack">' + IC.back + 'Kembali</button><button class="btn gold" id="offGo"' + (offKind ? '' : ' disabled') + '>' + IC.face + 'Lanjut verifikasi wajah</button></div></div>';
+    bindCommon(); $("offBack").onclick = () => go("home"); $("offNote").oninput = e => { offNote = e.target.value; };
+    document.querySelectorAll("[data-off]").forEach(b => b.onclick = () => { offKind = b.dataset.off; document.querySelectorAll("[data-off]").forEach(x => x.classList.toggle("on", x === b)); $("offGo").disabled = false; });
+    $("offGo").onclick = () => { if (!offKind) return toast("Pilih Izin atau Sakit"); offNote = $("offNote").value.trim(); go("scan"); };
   } else if (view === "scan") {
     const SX = (CFG.shifts || DEF_CFG.shifts).find(x => x.id === curShift) || (CFG.shifts || DEF_CFG.shifts)[0];
-    A.innerHTML = header() + '<div class="shbar"><span><b>' + esc(SX.nama) + '</b> · ' + SX.masuk + '–' + SX.pulang + '</span><button id="shChg">Ganti shift</button></div>' + camBox("vid") + '<div class="status" id="status"></div><div class="links"><button id="lnMan">' + IC.cam + 'Absen manual</button></div><p class="foot">Lihat ke kamera, lalu kedipkan mata atau tolehkan kepala sedikit.</p>';
-    bindCommon(); $("shChg").onclick = () => go("home"); $("lnMan").onclick = () => go("manual");
+    A.innerHTML = header() + (tmMode ? '<div class="shbar off tm"><span><b>Absen pulang di TM</b> · tanpa radius kantor</span><button id="shChg">Batal</button></div>' : offKind ? '<div class="shbar off ' + offKind + '"><span><b>' + OFF_LBL[offKind] + '</b> · tidak masuk hari ini</span><button id="shChg">Ubah</button></div>' : '<div class="shbar"><span><b>' + esc(SX.nama) + '</b> · ' + SX.masuk + '–' + SX.pulang + '</span><button id="shChg">Ganti shift</button></div>') + camBox("vid") + '<div class="status" id="status"></div>' + (offKind || tmMode ? '' : '<div class="links"><button id="lnMan">' + IC.cam + 'Absen manual</button></div>') + '<p class="foot">Lihat ke kamera, lalu kedipkan mata atau tolehkan kepala sedikit.' + (tmMode ? '<br>Khusus absen pulang saat technical meeting di luar kantor. Harus sudah absen masuk hari ini.' : '') + (offKind ? '<br>Pengajuan ' + OFF_LBL[offKind].toLowerCase() + ' disetujui otomatis setelah wajah terverifikasi.' : '') + '</p>';
+    bindCommon(); $("shChg").onclick = () => go(offKind ? "off" : "home"); if ($("lnMan")) $("lnMan").onclick = () => go("manual");
+    if (offKind || tmMode) { if (TRIAL ? !STAFF.length : !Store.faces()) { setStatus("", "Belum ada wajah terdaftar", "Daftar wajah dulu di kantor."); $("camPh").innerHTML = IC.user + "Belum ada wajah terdaftar"; return; } runRecognize(); return; }
     if (CFG.lat == null) { setStatus("warn", "Lokasi kantor belum diatur", TRIAL ? "Tekan ⚙ lalu atur lokasi kantor (PIN uji coba " + CONFIG.TRIAL_PIN + ")." : "Minta Owner mengatur lokasi kantor di sistem utama."); $("camPh").innerHTML = IC.pin + "Lokasi kantor belum diatur"; return; }
     if (TRIAL ? !STAFF.length : !Store.faces()) { setStatus("", "Belum ada wajah terdaftar", "Tekan “Daftar wajah baru” untuk mendaftar pertama kali."); $("camPh").innerHTML = IC.user + "Belum ada wajah terdaftar"; return; }
     runRecognize();
@@ -187,9 +206,9 @@ async function render(){
   } else if (view === "set") {
     A.innerHTML = header() + (TRIAL && !setOk ? '<div class="card" style="text-align:center"><h3>Pengaturan uji coba</h3><p>Masukkan PIN pengaturan.</p><div class="pin">' + [0, 1, 2, 3].map(i => '<input inputmode="numeric" maxlength="1" data-p="' + i + '">').join("") + '</div><button class="btn" id="stBack" style="margin-top:8px">' + IC.back + 'Kembali</button></div>' : settingsHtml());
     bindCommon(); bindSettings();
-  } else if (view === "done") { A.innerHTML = header() + doneHtml; bindCommon(); const b = $("dnBack"); if (b) b.onclick = () => { const r = retryScan && curShift; retryScan = false; go(r ? "scan" : "home"); }; backTimer = setTimeout(() => { if (view === "done") go("home"); }, 9000); }
+  } else if (view === "done") { A.innerHTML = header() + doneHtml; bindCommon(); const b = $("dnBack"); if (b) b.onclick = () => { const r = retryScan && (curShift || offKind || tmMode); retryScan = false; go(r ? "scan" : "home"); }; backTimer = setTimeout(() => { if (view === "done") go("home"); }, 9000); }
 }
-let curShift = "", retryScan = false, regData = null, setOk = false, doneHtml = "", setTab = "lokasi";
+let tmMode = false, offKind = "", offNote = "", curShift = "", retryScan = false, regData = null, setOk = false, doneHtml = "", setTab = "lokasi";
 function bindCommon(){ const b = $("btnSet"); if (b) b.onclick = () => go("set"); }
 
 // pencocokan wajah: uji coba di perangkat, produksi di server (data wajah tidak pernah dikirim ke HP)
@@ -209,13 +228,13 @@ async function runRecognize(){
       if (!r) { who = null; hits = 0; ring(0); setStatus("", "Lihat ke kamera", "Dekatkan wajah ke lingkaran"); }
       else { const m = await whoIs(r.descriptor);
         if (!m) { who = null; hits = 0; ring(.15, "bad"); setStatus("bad", "Wajah tidak dikenali", "Belum terdaftar? Tekan “Daftar wajah baru”."); }
-        else { hits = who && who.s.id === m.s.id ? hits + 1 : 1; who = m; lastDesc = Array.from(r.descriptor); ring(.35, ""); setStatus("", m.s.name, "Mengenali…", '<em>' + esc(shTag({ shift: curShift })) + '</em>');
+        else { hits = who && who.s.id === m.s.id ? hits + 1 : 1; who = m; lastDesc = Array.from(r.descriptor); ring(.35, ""); setStatus("", m.s.name, "Mengenali…", '<em>' + esc(curTag(m.s)) + '</em>');
           if (hits >= 2) return liveCheck(); } }
     } catch (err) { console.warn(err); }
     setTimeout(idTick, 250); };
   // tahap 2: kedip ATAU tolehkan kepala (cepat, tanpa hitung identitas)
   const liveCheck = () => { let base = 0, closed = false, lost = 0, x0 = null, t0 = Date.now(), frames = 0;
-    setStatus("", who.s.name, "Kedipkan mata, atau tolehkan kepala sedikit", '<em>' + esc(shTag({ shift: curShift })) + '</em>');
+    setStatus("", who.s.name, "Kedipkan mata, atau tolehkan kepala sedikit", '<em>' + esc(curTag(who.s)) + '</em>');
     const tick = async () => { if (!loopOn || view !== "scan") return;
       try { const r = await detectLm(v);
         if (!r) { if (++lost > 8) { ring(0); setStatus("", "Lihat ke kamera", "Wajah keluar dari lingkaran"); who = null; hits = 0; return setTimeout(idTick, 200); } }
@@ -225,8 +244,8 @@ async function runRecognize(){
           if (!closed && frames >= 3 && e < base * .8) closed = true;
           const blinked = closed && e > base * .88, turned = x0 != null && Math.abs(nx - x0) > .09;
           ring(Math.min(.95, .45 + frames * .03), "");
-          if (blinked || turned) { loopOn = false; ring(1, "ok"); setStatus("ok", who.s.name, "Terverifikasi · mengecek lokasi…", '<em>' + esc(shTag({ shift: curShift })) + '</em>'); const shot = snap(v); return submit(who.s, shot, "wajah", lastDesc); }
-          if (Date.now() - t0 > 4000) setStatus("", who.s.name, "Kedipkan mata pelan, atau tolehkan kepala ke kiri / kanan", '<em>' + esc(shTag({ shift: curShift })) + '</em>'); }
+          if (blinked || turned) { loopOn = false; ring(1, "ok"); setStatus("ok", who.s.name, offKind ? "Terverifikasi · menyimpan " + OFF_LBL[offKind].toLowerCase() + "…" : tmMode ? "Terverifikasi · menyimpan absen pulang (TM)…" : "Terverifikasi · mengecek lokasi…", '<em>' + esc(curTag(who.s)) + '</em>'); const shot = snap(v); return offKind ? submitOff(who.s, shot, lastDesc) : submit(who.s, shot, "wajah", lastDesc); }
+          if (Date.now() - t0 > 4000) setStatus("", who.s.name, "Kedipkan mata pelan, atau tolehkan kepala ke kiri / kanan", '<em>' + esc(curTag(who.s)) + '</em>'); }
       } catch (err) { console.warn(err); }
       setTimeout(tick, 16); };
     tick(); };
@@ -254,18 +273,20 @@ async function runEnroll(){
     setTimeout(tick, 260); };
   tick();
 }
+// simpan siapa yang absen di perangkat ini, dipakai sistem utama (yannie-system) untuk sapaan & log aktivitas
+function saveOp(sid, name){ try { localStorage.setItem("yannie-op", JSON.stringify({ sid, name, date: todayIso(), ts: Date.now(), src: "absen" })); } catch (e) {} }
 async function submit(s, shot, method, desc){
-  if (!TRIAL) { setStatus("", s.name, "Mengecek lokasi…", '<em>' + esc(shTag(s)) + '</em>');
-    let p; try { p = await getPos(); } catch (e) { return fail("Lokasi tidak terdeteksi", e.message); }
-    let j; try { j = await Store.call("absen", { method, shift: curShift, sid: s.id, desc: desc ? desc.map(x => +x.toFixed(5)) : undefined, lat: p.latitude, lng: p.longitude, acc: p.accuracy, selfie: shot }); } catch (e) { return fail("Gagal mengirim absen", e.message || "Periksa koneksi internet lalu coba lagi"); }
+  if (!TRIAL) { const TM = tmMode; setStatus("", s.name, TM ? "Menyimpan absen pulang di TM…" : "Mengecek lokasi…", '<em>' + esc(TM ? "Pulang di TM" : shTag(s)) + '</em>');
+    let p = null; try { p = await getPos(); } catch (e) { if (!TM) return fail("Lokasi tidak terdeteksi", e.message); }
+    let j; try { j = await Store.call("absen", { method, tm: TM || undefined, shift: curShift, sid: s.id, desc: desc ? desc.map(x => +x.toFixed(5)) : undefined, lat: p ? p.latitude : undefined, lng: p ? p.longitude : undefined, acc: p ? p.accuracy : undefined, selfie: shot }); } catch (e) { return fail("Gagal mengirim absen", e.message || "Periksa koneksi internet lalu coba lagi"); }
     if (!j.ok) return fail(j.title, j.msg, j.done);
-    const r = j.rec; stopCam(); loopOn = false;
-    doneHtml = '<div class="card res ok"><div class="ic">' + IC.ck + '</div><b>Absen ' + r.type + ' berhasil</b><span class="nm">' + esc(r.name) + '</span><small>' + esc(r.shiftNama || "") + ' · ' + r.time + ' WIB · ' + r.dist + ' m dari kantor</small><img class="sf" src="' + shot + '" alt="">' + (r.late ? '<span class="tag late">Terlambat · ' + esc(r.shiftNama || "") + ' masuk ' + esc(r.masuk || "") + '</span>' : r.early ? '<span class="tag late">Pulang lebih awal</span>' : '<span class="tag on">Tepat waktu</span>') + (r.method === "manual" ? '<small>Absen manual — akan dicek admin.</small>' : '') + '<div class="row" style="margin-top:16px"><button class="btn" id="dnBack">Selesai</button></div></div>';
+    const r = j.rec; stopCam(); loopOn = false; saveOp(s.id, r.name || s.name);
+    doneHtml = '<div class="card res ok"><div class="ic">' + IC.ck + '</div><b>Absen ' + (r.tm ? "pulang di TM" : r.type) + ' berhasil</b><span class="nm">' + esc(r.name) + '</span><small>' + esc(r.shiftNama || "") + ' · ' + r.time + ' WIB · ' + (r.tm ? "di luar kantor" + (r.dist != null ? " (" + r.dist + " m dari kantor)" : "") : r.dist + ' m dari kantor') + '</small><img class="sf" src="' + shot + '" alt="">' + (r.tm ? '<span class="tag on">Pulang di TM · tercatat di rekap</span>' : r.late ? '<span class="tag late">Terlambat · ' + esc(r.shiftNama || "") + ' masuk ' + esc(r.masuk || "") + '</span>' : r.early ? '<span class="tag late">Pulang lebih awal</span>' : '<span class="tag on">Tepat waktu</span>') + (r.method === "manual" ? '<small>Absen manual — akan dicek admin.</small>' : '') + '<div class="row" style="margin-top:16px"><button class="btn" id="dnBack">Selesai</button></div></div>';
     return go("done"); }
   setStatus("", s.name, "Mengecek lokasi…", '<em>' + esc(shTag(s)) + '</em>');
   let p; try { p = await getPos(); } catch (e) { return fail("Lokasi tidak terdeteksi", e.message); }
   const dm = geoDist(CFG.lat, CFG.lng, p.latitude, p.longitude);
-  if (dm > (CFG.radius || CONFIG.RADIUS_M)) return fail("Absen ditolak — di luar radius kantor", s.name + ", posisi Anda " + Math.round(dm) + " m dari kantor (maksimal " + (CFG.radius || CONFIG.RADIUS_M) + " m)." + (p.accuracy > 30 ? " Akurasi GPS ±" + Math.round(p.accuracy) + " m." : ""));
+  if (!tmMode && dm > (CFG.radius || CONFIG.RADIUS_M)) return fail("Absen ditolak — di luar radius kantor", s.name + ", posisi Anda " + Math.round(dm) + " m dari kantor (maksimal " + (CFG.radius || CONFIG.RADIUS_M) + " m)." + (p.accuracy > 30 ? " Akurasi GPS ±" + Math.round(p.accuracy) + " m." : ""));
   let today = []; try { today = await Store.logsToday(s.id); } catch (e) {}
   const type = !today.some(l => l.type === "masuk") ? "masuk" : !today.some(l => l.type === "pulang") ? "pulang" : null;
   if (!type) return fail("Absen hari ini sudah lengkap", s.name + " sudah absen masuk & pulang hari ini.", true);
@@ -273,10 +294,22 @@ async function submit(s, shot, method, desc){
   try { const url = await Store.selfie(id, shot);
     await Store.addLog({ id, staff_id: s.id, name: s.name, shift: s.shift, date: todayIso(), type, time: tm, ts: new Date().toISOString(), lat: +p.latitude.toFixed(6), lng: +p.longitude.toFixed(6), acc: Math.round(p.accuracy || 0), dist: Math.round(dm), method, selfie: url, late, early });
   } catch (e) { return fail("Gagal mengirim absen", (e && e.message) || "Periksa koneksi internet lalu coba lagi"); }
-  stopCam(); loopOn = false;
+  stopCam(); loopOn = false; saveOp(s.id, s.name);
   doneHtml = '<div class="card res ok"><div class="ic">' + IC.ck + '</div><b>Absen ' + type + ' berhasil</b><span class="nm">' + esc(s.name) + '</span><small>' + esc(shTag(s)) + ' · ' + tm + ' · ' + Math.round(dm) + ' m dari kantor</small><img class="sf" src="' + shot + '" alt="">' + (late ? '<span class="tag late">Terlambat · jam masuk ' + esc(CFG.jamMasuk) + '</span>' : early ? '<span class="tag late">Pulang lebih awal</span>' : '<span class="tag on">Tepat waktu</span>') + (method === "manual" ? '<small>Absen manual — akan dicek admin.</small>' : '') + '<div class="row" style="margin-top:16px"><button class="btn" id="dnBack">Selesai</button></div></div>';
   go("done");
 }
+async function submitOff(s, shot, desc){
+  const kind = offKind, L = OFF_LBL[kind];
+  if (!TRIAL) { let j; try { j = await Store.call("izin", { kind, note: offNote, desc: desc ? desc.map(x => +x.toFixed(5)) : undefined, selfie: shot }); } catch (e) { return fail("Gagal mengirim " + L.toLowerCase(), e.message || "Periksa koneksi internet lalu coba lagi"); }
+    if (!j.ok) return fail(j.title, j.msg, j.done); return offDone(j.rec.name, j.rec.shiftNama || shTag(s), j.rec.time, kind, j.rec.note, shot); }
+  let today = []; try { today = await Store.logsToday(s.id); } catch (e) {}
+  if (today.some(l => l.type === "masuk")) return fail("Anda sudah absen masuk hari ini", s.name + " sudah absen masuk, jadi tidak bisa mengajukan " + L.toLowerCase() + ".", true);
+  if (today.some(l => OFF_LBL[l.type])) return fail("Sudah tercatat hari ini", s.name + " sudah mengajukan izin/sakit hari ini.", true);
+  const tm = hhmm(), id = uid("ab"); try { const url = await Store.selfie(id, shot); await Store.addLog({ id, staff_id: s.id, name: s.name, shift: s.shift, date: todayIso(), type: kind, time: tm, ts: new Date().toISOString(), note: offNote, method: "wajah", selfie: url, status: "approved" }); } catch (e) { return fail("Gagal menyimpan", (e && e.message) || "Coba lagi"); }
+  offDone(s.name, shTag(s), tm, kind, offNote, shot); }
+function offDone(name, sh, tm, kind, note, shot){ stopCam(); loopOn = false; const L = OFF_LBL[kind];
+  doneHtml = '<div class="card res ok"><div class="ic">' + IC.ck + '</div><b>' + L + ' tercatat</b><span class="nm">' + esc(name) + '</span><small>' + esc(sh) + ' · ' + tm + ' WIB</small><img class="sf" src="' + shot + '" alt=""><span class="tag ' + (kind === "sakit" ? "sk" : "iz") + '">Disetujui otomatis · masuk rekap</span>' + (note ? '<small>Keterangan: ' + esc(note) + '</small>' : '') + '<small>' + (kind === "sakit" ? "Semoga lekas sembuh 🤍" : "Terima kasih sudah mengabari.") + '</small><div class="row" style="margin-top:16px"><button class="btn" id="dnBack">Selesai</button></div></div>';
+  offKind = ""; offNote = ""; go("done"); }
 function fail(t, m, info){ stopCam(); loopOn = false; doneHtml = '<div class="card res ' + (info ? "ok" : "bad") + '"><div class="ic">' + (info ? IC.ck : IC.x) + '</div><b>' + esc(t) + '</b><small>' + esc(m) + '</small><div class="row" style="margin-top:16px"><button class="btn gold" id="dnBack">Coba lagi</button></div></div>'; retryScan = !info; go("done"); }
 
 /* ------------------------- pengaturan (uji coba) ------------------------- */
