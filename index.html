@@ -2238,6 +2238,18 @@
   .cb-h{display:flex;flex-direction:column;gap:2px;margin-bottom:10px} .cb-h b{font-size:14px} .cb-h small{color:var(--muted);font-size:12px;line-height:1.45}
   .tx-hint.cb-st{border-left:3px solid var(--gold);padding-left:8px} .tx-hint.cb-st.ok{border-color:#2f8a55;color:#2f7a4c}
   .iv-r.buf .iv-desc{border-color:var(--gold);background:var(--panel2);font-weight:600}
+  .rc-delmode{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:7px 12px;font:600 12.5px inherit;cursor:pointer} .rc-delmode svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2} .rc-delmode:hover{color:#b3261e;border-color:#e2a9a3} .rc-delmode.on{background:#b3261e;color:#fff;border-color:#b3261e}
+  .rc-selbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 10px;padding:10px 14px;border-radius:12px;background:#fbeceb;border:1px solid #f0c9c5;color:#7a1f18;font-size:13px} .rc-selbar span{flex:1}
+  .rc-selbar .btn.danger{background:#b3261e;color:#fff;border-color:#b3261e} .rc-selbar .btn.danger:disabled{opacity:.45} .rc-selbar .btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2}
+  .rc tr.rc-selrow{cursor:pointer} .rc tr.rc-selrow.on td{background:#fbeceb!important} .rc td.rc-ck::before{content:none!important} .rc td.rc-ck input{width:15px;height:15px;accent-color:#b3261e;pointer-events:none}
+  .rc .rc-dth{padding:0 4px} .rc-dbtn{display:inline-flex;align-items:center;gap:4px;border:0;background:transparent;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;padding:6px 6px;border-radius:8px;white-space:nowrap}
+  .rc-dbtn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.2} .rc-dbtn:hover{background:var(--panel2)} .rc-dbtn.on{background:var(--ink,#2f2418);color:#fff}
+  .rc-dpop{position:fixed;z-index:120;width:240px;max-height:min(420px,60vh);overflow:auto;padding:6px;border-radius:14px;background:var(--panel,#fff);border:1px solid var(--line);box-shadow:0 18px 40px -12px rgba(0,0,0,.35)}
+  .rdp-h{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:6px 8px 4px}
+  .rdp-i{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;border:0;background:transparent;color:var(--text);font:500 13px inherit;padding:8px 10px;border-radius:9px;cursor:pointer;text-align:left;text-transform:capitalize}
+  .rdp-i:hover{background:var(--panel2)} .rdp-i.on{background:var(--ink,#2f2418);color:#fff} .rdp-i em{font-style:normal;font-size:11px;min-width:20px;text-align:center;padding:1px 6px;border-radius:9px;background:var(--panel2);color:var(--muted)} .rdp-i.on em{background:rgba(255,255,255,.2);color:#fff}
+  .rdp-i.wk{padding-left:22px;font-size:12.5px} .rdp-i.wk small{color:var(--muted);font-size:11px;margin-left:4px} .rdp-i.on small{color:rgba(255,255,255,.75)} .rdp-i.zero:not(.on){opacity:.5} .rdp-e{padding:8px 10px;color:var(--muted);font-size:13px}
+  .rc-sum{margin:2px 0 10px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap} .rc-sum b{color:var(--text)} .rc-fclr{border:1px solid var(--line);background:transparent;border-radius:999px;padding:3px 10px;font:600 11.5px inherit;color:var(--muted);cursor:pointer}
   .op-ov.force{background:rgba(15,10,5,.72)}
   .op-sug{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--gold);background:var(--panel2);color:var(--text);cursor:pointer;text-align:left;font:inherit}
   .op-sug span:not(.sb-av){flex:1} .op-sug small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)} .op-sug b{font-size:15px} .op-sug svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2} .op-sug .sb-av{width:34px;height:34px;flex:0 0 34px}
@@ -2584,6 +2596,7 @@
   // Isi kategori versi 2 (berlaku untuk SEMUA paket, termasuk yang sudah tersimpan)
   const VENDOR_PH = "Ketik nama vendor di sini…";
   function migrateTpl(t){
+    try { if (t && typeof textCase === "function") { if (t.name) t.name = textCase(t.name); if (t.event && t.event.venue) t.event.venue = textCase(t.event.venue); (t.addons || []).forEach(a => { if (a && a.name) a.name = textCase(a.name); }); } } catch (e) {}
     if (!t || t.v >= 5 || !Array.isArray(t.categories)) return t;
     const v0 = t.v || 0;
     if (v0 < 2) t.categories.forEach(c => {
@@ -3224,8 +3237,33 @@
       const lw = w.toLowerCase(); if (i > 0 && NAME_LOW.has(lw)) return lw;
       return lw.replace(/(^|[-'’(])([a-z\u00e0-\u00ff])/g, (m, p, c) => p + c.toUpperCase()); }).join(" "); }
   const NAME_KEY = /(^|\.)(name|father|mother|pob)$/;
-  function fixNames(o){ ["cpp", "cpw"].forEach(k => { if (o[k]) ["name", "father", "mother"].forEach(f => { if (o[k][f]) o[k][f] = nameCase(o[k][f]); }); }); if (o.signer && o.signer.pob) o.signer.pob = nameCase(o.signer.pob); return o; }
-  const nmSig = x => JSON.stringify([x.cpp, x.cpw, x.signer && x.signer.pob]);
+  // format proper untuk teks bebas (paket, venue, alamat, add-on, item invoice, vendor)
+  const TX_LOW = new Set(["dan", "di", "ke", "dari", "yang", "untuk", "dengan", "atau", "per", "&", "and", "of", "the", "x"]);
+  const TX_ACR = new Set(["GOR","KUA","TNI","POLRI","PT","CV","RT","RW","BSD","MUA","TM","DP","BCA","BRI","BNI","BTN","BSI","PLN","RS","RSUD","SMA","SMK","SMP","SD","UI","ITB","IPB","UIN","LED","VIP","VVIP","MC","AC","HT","DKI","PKK","KUD","BPJS","II","III","IV","VI","VII","VIII","IX","XI","XII","CPP","CPW","STTD","KM","SPBU","KFC","BUMN","UMKM","GSG","ATM","WO","IG"]);
+  const TX_UNIT = new Set(["m", "cm", "mm", "kg", "gr", "pcs", "lt", "m2", "m²"]);
+  function textCase(str){ const s = String(str == null ? "" : str).replace(/[ \t]+/g, " ").trim(); if (!s) return s;
+    const L = s.replace(/[^A-Za-z]/g, ""), allUp = L.length > 1 && L === L.toUpperCase(); let first = true;
+    return s.split(" ").map(w => { const isFirst = first; if (/[A-Za-z]/.test(w)) first = false;
+      const core = w.replace(/[^A-Za-z]/g, ""); if (!core) return w;
+      if (TX_UNIT.has(w.toLowerCase())) return w.toLowerCase();
+      if (TX_ACR.has(core.toUpperCase()) && !/\d/.test(w)) return w.toUpperCase();
+      if (/\d/.test(w)) return w;
+      if (!allUp && core.length > 1 && core === core.toUpperCase()) return w; // singkatan di teks campuran (mis. GOR)
+      if (!allUp && /[a-z]/.test(core) && /[A-Z]/.test(core.slice(1))) return w; // gaya khusus (mis. McD)
+      const lw = w.toLowerCase(); if (!isFirst && TX_LOW.has(lw)) return lw;
+      return lw.replace(/(^|[-'’(\/.])([a-z\u00e0-\u00ff])/g, (m, p, c) => p + c.toUpperCase()); }).join(" "); }
+  function fixNames(o){ ["cpp", "cpw"].forEach(k => { if (o[k]) ["name", "father", "mother"].forEach(f => { if (o[k][f]) o[k][f] = nameCase(o[k][f]); }); }); if (o.signer && o.signer.pob) o.signer.pob = nameCase(o.signer.pob);
+    const sigF = x => (+x.price || 0) + "|" + (x.pax || 0) + "|" + (x.addons || []).map(a => a.name + ":" + a.price + ":" + addQ(a).qty).join(","), sig0 = o.invoice ? sigF(o) : null;
+    ["packageName", "venue", "client"].forEach(k => { if (typeof o[k] === "string" && o[k]) o[k] = textCase(o[k]); });
+    if (typeof o.address === "string" && o.address && !/\n/.test(o.address)) o.address = textCase(o.address);
+    if (o.custom && typeof o.custom.name === "string") o.custom.name = textCase(o.custom.name);
+    if (o.venueBooking && o.venueBooking.venue) o.venueBooking.venue = textCase(o.venueBooking.venue);
+    (o.addons || []).forEach(a => { if (a && a.name) a.name = textCase(a.name); });
+    (o.vendors || []).forEach(v => { if (v && v.name) v.name = textCase(v.name); });
+    if (o.invoice) { (o.invoice.items || []).forEach(i => { if (i && i.desc) i.desc = textCase(i.desc); }); const c = o.invoice.catering; if (c && c.items) c.items.forEach(i => { if (i && i.name) i.name = textCase(i.name); });
+      if (sig0 && o.invoice.sig === sig0) o.invoice.sig = sigF(o); }
+    return o; }
+  const nmSig = x => JSON.stringify([x.cpp, x.cpw, x.signer && x.signer.pob, x.packageName, x.venue, x.client, x.address, x.custom, x.venueBooking, x.addons, x.vendors, x.invoice]);
   function fixAllNames(push){ Object.values(data.transactions || {}).forEach(x => { if (!x) return; const b = nmSig(x); fixNames(x); if (push && nmSig(x) !== b && db) db.collection("transactions").doc(x.id).set(clone(x)).catch(() => {}); }); }
   const fmtDate = d => { if (!d) return "-"; const p = d.split("-"); return +p[2] + " " + MONTHS[+p[1] - 1] + " " + p[0]; };
   function fmtTime(iso){ return iso ? new Date(iso).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }) : "-"; }
@@ -4059,7 +4097,7 @@
   // ================= cincin emas 3D (WebGL, tanpa pustaka luar) =================
 
   // ---- tabel rekap client (hanya-baca) ----
-  let recapTab = "client";
+  let recapTab = "client", rcMonth = "", rcWeek = 0, rcSel = null, rcFilData = null; // rcSel: Set id client terpilih (mode hapus, khusus owner)
   let payOpen = false;
   document.addEventListener("click", e => { const b = e.target.closest("[data-paytog]"); if (!b) return; e.stopPropagation(); e.preventDefault();
     payOpen = !payOpen; document.querySelectorAll("table.rc").forEach(t => t.classList.toggle("pay-open", payOpen)); }, true);
@@ -4089,23 +4127,50 @@
     clr.addEventListener("click", e => { e.preventDefault(); rcQuery = ""; inp.value = ""; rcApply(root); draw(); inp.focus(); });
     box.addEventListener("click", e => e.stopPropagation());
     rcApply(root); }
+  function rcFilApply(m, w){ rcMonth = m; rcWeek = w; document.querySelectorAll(".rc-dpop").forEach(p => p.remove()); const full = $("recapModal").classList.contains("open");
+    if ((location.hash || "").slice(1) === "beranda") { const y0 = scrollY; renderHome(); scrollTo(0, y0); } if (full) openRecapFull(); }
+  document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-dfil]"), pop = document.querySelector(".rc-dpop");
+    const c = e.target.closest && e.target.closest("[data-rfm]"); if (c) { e.preventDefault(); e.stopPropagation(); rcFilApply(c.dataset.rfm, +(c.dataset.rfw || 0)); return; }
+    if (pop && !pop.contains(e.target)) pop.remove(); if (!b || !rcFilData) return; e.preventDefault(); e.stopPropagation(); if (pop) return;
+    const F = rcFilData, n = m => F.LA.filter(x => (x.date || "").slice(0, 7) === m).length, el = document.createElement("div"); el.className = "rc-dpop";
+    el.innerHTML = '<div class="rdp-h">Tanggal event</div><button class="rdp-i' + (rcMonth ? "" : " on") + '" data-rfm=""><span>Semua tanggal</span><em>' + F.LA.length + '</em></button>' +
+      (F.months.length ? F.months.map(m => '<button class="rdp-i' + (rcMonth === m && !rcWeek ? " on" : "") + '" data-rfm="' + m + '"><span>' + F.mName(m) + '</span><em>' + n(m) + '</em></button>' +
+        (rcMonth === m ? F.wks.map((w, i) => { const k = F.LM.filter(x => x.date >= w.from && x.date <= w.to).length; return '<button class="rdp-i wk' + (rcWeek === i + 1 ? " on" : "") + (k ? "" : " zero") + '" data-rfm="' + m + '" data-rfw="' + (i + 1) + '"><span>Minggu ' + (i + 1) + ' <small>' + (+w.from.slice(8)) + '–' + (+w.to.slice(8)) + '</small></span><em>' + k + '</em></button>'; }).join("") : '')).join("") : '<p class="rdp-e">Belum ada tanggal event.</p>');
+    document.body.appendChild(el); const r = b.getBoundingClientRect(); el.style.left = Math.max(8, Math.min(r.left, innerWidth - el.offsetWidth - 8)) + "px"; el.style.top = (r.bottom + 6) + "px";
+    const on = el.querySelector(".rdp-i.on"); if (on) on.scrollIntoView({ block: "nearest" }); }, true);
+  addEventListener("scroll", () => { const p = document.querySelector(".rc-dpop"); if (p) p.remove(); }, true);
+  function rcWeeks(ym){ const y = +ym.slice(0, 4), m = +ym.slice(5, 7) - 1, last = new Date(y, m + 1, 0).getDate(), p2 = n => String(n).padStart(2, "0"), out = []; let d = 1;
+    while (d <= last) { const dow = (new Date(y, m, d).getDay() + 6) % 7, end = Math.min(last, d + (6 - dow)); out.push({ from: ym + "-" + p2(d), to: ym + "-" + p2(end) }); d = end + 1; } return out; }
+  const rcRowAttr = (x, tab) => rcSel ? 'data-rsel="' + x.id + '" class="rc-selrow' + (rcSel.has(x.id) ? " on" : "") + '"' : 'data-go="trx-' + x.id + '/' + tab + '"';
   function recapHtml(){
-    const t0 = todayIso(), L = trxList().filter(x => (x.payments || []).some(p => (+p.amount || 0) > 0));
-    L.sort((a, b) => (a.date || "9999").localeCompare(b.date || "9999") || (a.resepsi && a.resepsi.start || a.akad && a.akad.start || "99").localeCompare(b.resepsi && b.resepsi.start || b.akad && b.akad.start || "99") || coupleName(a).localeCompare(coupleName(b)));
+    const t0 = todayIso(), LA = trxList().filter(x => (x.payments || []).some(p => (+p.amount || 0) > 0));
+    LA.sort((a, b) => (a.date || "9999").localeCompare(b.date || "9999") || (a.resepsi && a.resepsi.start || a.akad && a.akad.start || "99").localeCompare(b.resepsi && b.resepsi.start || b.akad && b.akad.start || "99") || coupleName(a).localeCompare(coupleName(b)));
+    // filter per bulan, lalu per minggu (Senin–Minggu) di dalam bulan terpilih
+    const months = [...new Set(LA.filter(x => x.date).map(x => x.date.slice(0, 7)))].sort();
+    if (rcMonth && !months.includes(rcMonth)) { rcMonth = ""; rcWeek = 0; }
+    const wks = rcMonth ? rcWeeks(rcMonth) : [];
+    if (rcWeek > wks.length) rcWeek = 0;
+    let L = rcMonth ? LA.filter(x => (x.date || "").slice(0, 7) === rcMonth) : LA;
+    const LM = L;
+    if (rcMonth && rcWeek) { const w = wks[rcWeek - 1]; L = L.filter(x => x.date >= w.from && x.date <= w.to); }
+    const mLbl = ym => { const d = new Date(+ym.slice(0, 4), +ym.slice(5, 7) - 1, 1); return d.toLocaleDateString("id-ID", { month: "short" }) + " " + ym.slice(0, 4); };
+    const mName = ym => new Date(+ym.slice(0, 4), +ym.slice(5, 7) - 1, 1).toLocaleDateString("id-ID", { month: "long", year: "numeric" });
+    rcFilData = { months, LA, LM, wks, mName };
+    const filH = rcMonth ? '<p class="rc-sum"><b>' + L.length + ' event</b> ' + (rcWeek ? 'di minggu ke-' + rcWeek + ' ' + mName(rcMonth) + ' (' + fmtDate(wks[rcWeek - 1].from) + ' – ' + fmtDate(wks[rcWeek - 1].to) + ')' : 'di ' + mName(rcMonth) + ' (' + fmtDate(rcMonth + "-01") + ' – ' + fmtDate(wks[wks.length - 1].to) + ')') + ' <button class="rc-fclr" data-rfm="">Hapus filter ✕</button></p>' : '';
     const cats = []; L.forEach(x => (x.vendors || []).forEach(v => { const c = properCase((v.cat || "").trim()); if (c && !cats.some(k => k.toLowerCase() === c.toLowerCase())) cats.push(c); }));
     if (!cats.length) ["Rias & busana", "Dekorasi", "Dokumentasi", "Hiburan", "MC", "Catering"].forEach(c => cats.push(c));
     const dot = st => st === "booked" ? '<i class="bdot ok" title="Sudah booked"></i>' : '';
-    const venCell = (x, plain) => { const vb = (x.venueBooking || {}).status || "belum", nm = esc(properCase(x.venue || "-"));
+    const venCell = (x, plain) => { plain = plain || noVenue(x); const vb = (x.venueBooking || {}).status || "belum", nm = esc(properCase(x.venue || "-"));
       return plain ? '<td class="rc-ven"><span class="vn">' + nm + '</span></td>' : '<td class="rc-ven"><span class="vd ' + vb + '">' + dot(vb) + '<span class="vn">' + nm + '</span></span></td>'; };
     const paxCell = x => { const tp = trxPax(x), ap = trxAddPax(x); return '<td class="r rc-pax"' + (ap ? ' title="' + x.pax + ' pax paket + ' + ap + ' pax buffet catering"' : '') + '>' + (tp || "-") + (ap ? '<small>+' + ap + ' buffet</small>' : '') + '</td>'; };
-    const base = (x, plain) => '<td class="rc-n"></td><td class="rc-c1"><b>' + esc(properCase(x.cpp && x.cpp.name || "-")) + '</b></td><td class="rc-c2"><b>' + esc(properCase(x.cpw && x.cpw.name || "-")) + '</b></td><td class="rc-d">' + fmtDMY(x.date) + '</td><td class="rc-pk">' + esc(trxPkgLabel(x)) + '</td>' + venCell(x, plain) + paxCell(x);
+    const base = (x, plain) => (rcSel ? '<td class="rc-n rc-ck"><input type="checkbox" tabindex="-1"' + (rcSel.has(x.id) ? " checked" : "") + ' aria-label="Pilih client"></td>' : '<td class="rc-n"></td>') + '<td class="rc-c1"><b>' + esc(properCase(x.cpp && x.cpp.name || "-")) + '</b></td><td class="rc-c2"><b>' + esc(properCase(x.cpw && x.cpw.name || "-")) + '</b></td><td class="rc-d">' + fmtDMY(x.date) + '</td><td class="rc-pk">' + esc(trxPkgLabel(x)) + '</td>' + venCell(x, plain) + paxCell(x);
     const stChip = s => s.lunas ? '<span class="tchip ok">Lunas</span>' : s.late ? '<span class="tchip late">Telat bayar</span>' : '<span class="tchip run">Belum lunas</span>';
-    const headBase = '<th class="rc-n">No</th><th class="rc-c1">CPP</th><th class="rc-c2">CPW</th><th>Tgl. event</th><th>Paket</th><th>Venue</th><th class="r">Pax</th>';
+    const headBase = '<th class="rc-n">No</th><th class="rc-c1">CPP</th><th class="rc-c2">CPW</th><th class="rc-dth"><button type="button" class="rc-dbtn' + (rcMonth ? " on" : "") + '" data-dfil title="Filter tanggal event per bulan">' + (rcMonth ? esc(new Date(+rcMonth.slice(0, 4), +rcMonth.slice(5, 7) - 1, 1).toLocaleDateString("id-ID", { month: "short", year: "numeric" })) + (rcWeek ? " · M" + rcWeek : "") : "Tgl. event") + svgI('<path d="m6 9 6 6 6-6"/>') + '</button></th><th>Paket</th><th>Venue</th><th class="r">Pax</th>';
     let body, head;
     if (recapTab === "client") {
       head = headBase + cats.map(c => '<th class="rc-v">' + esc(c) + '</th>').join("") + '<th>H- acara</th><th>Status</th>';
       body = L.map(x => { const s = trxState(x), dl = x.date ? daysBetween(t0, x.date) : null;
-        return '<tr data-go="trx-' + x.id + '/client" data-q="' + esc(rcKey(x)) + '">' + base(x) + cats.map(c => { const v = (x.vendors || []).find(q => properCase((q.cat || "").trim()).toLowerCase() === c.toLowerCase());
+        return '<tr ' + rcRowAttr(x, "client") + ' data-q="' + esc(rcKey(x)) + '">' + base(x) + cats.map(c => { const v = (x.vendors || []).find(q => properCase((q.cat || "").trim()).toLowerCase() === c.toLowerCase());
           return '<td class="rc-v">' + (v ? '<span class="vd ' + v.status + '">' + dot(v.status) + '<span class="vn">' + (v.name ? esc(properCase(v.name)) : '<em>' + VEN_ST[v.status] + '</em>') + (v.name && v.status === "proses" ? '<em> · nego</em>' : '') + '</span></span>' : '<span class="vd none">—</span>') + '</td>'; }).join("") +
           '<td class="rc-h">' + (dl == null ? "-" : dl > 0 ? "H-" + dl : dl === 0 ? "Hari H" : "Selesai") + '</td><td>' + stChip(s) + '</td></tr>'; }).join("");
     } else {
@@ -4113,13 +4178,14 @@
       head = headBase + idx.map(i => '<th class="r rc-pc">Pembayaran ' + (i + 1) + '</th>').join("") + '<th class="r rc-sh"><button type="button" class="rc-tog" data-paytog title="Tampilkan / sembunyikan rincian pembayaran">Sisa pembayaran ' + svgI('<path d="m9 6 6 6-6 6"/>') + '</button></th><th>Status</th>';
       body = L.map(x => { const s = trxState(x), P = x.payments || [];
         const cell = i => { const p = P[i]; return p ? '<td class="r rc-p rc-pc"><b>' + rp(+p.amount || 0) + '</b><small>' + fmtDMY(p.date) + (p.type ? " · " + ({ dp: "DP", full: "Full", lanjutan: "Lanjutan", pelunasan: "Pelunasan" }[p.type] || "") : "") + '</small></td>' : '<td class="r rc-p rc-pc empty">—</td>'; };
-        return '<tr data-go="trx-' + x.id + '/finance" data-q="' + esc(rcKey(x)) + '">' + base(x, true) + idx.map(cell).join("") + '<td class="r rc-sisa' + (s.rest ? "" : " zero") + '"><button type="button" class="rc-sbtn" data-paytog title="Klik untuk melihat rincian ' + P.length + ' pembayaran"><b>' + rp(s.rest) + '</b><small>dari ' + rp(s.total) + ' · ' + P.length + 'x bayar</small></button></td><td>' + stChip(s) + '</td></tr>'; }).join("");
+        return '<tr ' + rcRowAttr(x, "finance") + ' data-q="' + esc(rcKey(x)) + '">' + base(x, true) + idx.map(cell).join("") + '<td class="r rc-sisa' + (s.rest ? "" : " zero") + '"><button type="button" class="rc-sbtn" data-paytog title="Klik untuk melihat rincian ' + P.length + ' pembayaran"><b>' + rp(s.rest) + '</b><small>dari ' + rp(s.total) + ' · ' + P.length + 'x bayar</small></button></td><td>' + stChip(s) + '</td></tr>'; }).join("");
     }
     const lunasN = L.filter(x => trxState(x).lunas).length;
     return '<section class="card rc-card"><div class="rc-top"><div><h3>Rekap data client</h3><small>' + L.length + ' client · ' + lunasN + ' lunas · ' + (L.length - lunasN) + ' belum lunas · diurutkan dari tanggal event terdekat · hanya client yang sudah membayar</small></div>' +
-      '<div class="rc-tabs">' + rcSearchBox("rcSearch") + '<button class="rc-full" id="rcFull" title="Tampilan penuh" aria-label="Tampilan penuh">' + svgI('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>') + '</button><button class="' + (recapTab === "client" ? "on" : "") + '" data-rt="client">Rekap client &amp; vendor</button><button class="' + (recapTab === "pay" ? "on" : "") + '" data-rt="pay">Status pembayaran</button></div></div>' +
+      '<div class="rc-tabs">' + rcSearchBox("rcSearch") + (getRole() === "owner" && L.length ? '<button class="rc-delmode' + (rcSel ? " on" : "") + '" id="rcDelMode" title="Pilih client untuk dihapus">' + svgI('<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>') + (rcSel ? "Selesai" : "Hapus client") + '</button>' : '') + '<button class="rc-full" id="rcFull" title="Tampilan penuh" aria-label="Tampilan penuh">' + svgI('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>') + '</button><button class="' + (recapTab === "client" ? "on" : "") + '" data-rt="client">Rekap client &amp; vendor</button><button class="' + (recapTab === "pay" ? "on" : "") + '" data-rt="pay">Status pembayaran</button></div></div>' +
+      filH + (rcSel ? '<div class="rc-selbar"><span><b id="rcSelN">' + rcSel.size + '</b> client dipilih · klik baris untuk memilih</span><button class="btn small" id="rcSelAll">' + (rcSel.size === L.length ? "Batal pilih semua" : "Pilih semua") + '</button><button class="btn small danger" id="rcSelDel"' + (rcSel.size ? '' : ' disabled') + '>' + svgI('<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>') + 'Hapus terpilih</button></div>' : '') +
       (L.length ? '<p class="rc-hint">' + (recapTab === "pay" ? 'Klik nominal sisa pembayaran untuk menampilkan / menyembunyikan rincian pembayaran 1, 2, 3, dst.' : 'Geser tabel ke samping untuk melihat kolom lainnya →') + '</p><div class="rc-wrap"><table class="rc' + (payOpen ? ' pay-open' : '') + '"><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table></div>'
-        : '<div class="tx-empty">' + svgI('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/>') + '<b>Belum ada client yang membayar</b><span>Client masuk tabel otomatis setelah DP / pembayaran pertama dicatat Admin 3, diurutkan sesuai tanggal event.</span></div>') + '</section>';
+        : rcMonth ? '<div class="tx-empty sm">Tidak ada event di periode ini.</div>' : '<div class="tx-empty">' + svgI('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/>') + '<b>Belum ada client yang membayar</b><span>Client masuk tabel otomatis setelah DP / pembayaran pertama dicatat Admin 3, diurutkan sesuai tanggal event.</span></div>') + '</section>';
   }
   function openRecapFull(){
     const paint = () => { const tmp = document.createElement("div"); tmp.innerHTML = recapHtml(); const card = tmp.firstChild;
@@ -4589,6 +4655,15 @@
     $("apMain").querySelectorAll("[data-trx]").forEach(bt => bt.addEventListener("click", () => startProfitFromTrx(bt.dataset.trx)));
     bindLateButtons();
     $("apMain").querySelectorAll("[data-rt]").forEach(b => b.addEventListener("click", () => { recapTab = b.dataset.rt; const y0 = window.scrollY; renderHome(); window.scrollTo(0, y0); }));
+    { const rer = () => { const y0 = window.scrollY; renderHome(); window.scrollTo(0, y0); };
+      if ($("rcDelMode")) $("rcDelMode").addEventListener("click", () => { rcSel = rcSel ? null : new Set(); rer(); });
+      $("apMain").querySelectorAll("tr[data-rsel]").forEach(tr => tr.addEventListener("click", () => { const id = tr.dataset.rsel; if (rcSel.has(id)) rcSel.delete(id); else rcSel.add(id); tr.classList.toggle("on", rcSel.has(id)); const c = tr.querySelector("input"); if (c) c.checked = rcSel.has(id);
+        $("rcSelN").textContent = rcSel.size; $("rcSelDel").disabled = !rcSel.size; }));
+      if ($("rcSelAll")) $("rcSelAll").addEventListener("click", () => { const ids = [...$("apMain").querySelectorAll("tr[data-rsel]")].filter(t => t.style.display !== "none").map(t => t.dataset.rsel); const all = ids.every(i => rcSel.has(i)); ids.forEach(i => all ? rcSel.delete(i) : rcSel.add(i)); rer(); });
+      if ($("rcSelDel")) $("rcSelDel").addEventListener("click", async () => { const ids = [...rcSel].filter(i => data.transactions[i]); if (!ids.length) return;
+        const names = ids.map(i => coupleName(data.transactions[i])); if (!await ask("Hapus " + ids.length + " client?", names.slice(0, 6).join(", ") + (names.length > 6 ? " dan " + (names.length - 6) + " lainnya" : "") + " beserta jadwal, invoice, riwayat pembayaran, KTP & bukti transfernya akan dihapus permanen.", "Ya, hapus " + ids.length + " client")) return;
+        for (const i of ids) { try { logEvent("hapus", "Hapus client " + coupleName(data.transactions[i])); } catch (e) {} await delTrx(i); }
+        rcSel = null; toast(ids.length + " client dihapus"); rer(); }); }
     if ($("rcFull")) $("rcFull").addEventListener("click", openRecapFull);
     if ($("rcSearch")) bindRcSearch($("rcSearch"), $("rcSearch").closest(".rc-card"));
     if ($("bellHint")) $("bellHint").addEventListener("click", e => { e.stopPropagation(); scrollTo({ top: 0, behavior: "smooth" }); setTimeout(() => $("btnPay").click(), 250); });
@@ -4722,6 +4797,7 @@
 
   // ---- simpan ----
   async function putTrx(x){
+    try { fixNames(x); } catch (e) {}
     x.updatedAt = new Date().toISOString(); data.transactions[x.id] = x;
     if (!saveData()) toast("Memori browser penuh — data tetap tersimpan di server bila online");
     updatePayBell();
@@ -5009,6 +5085,8 @@
     if (n == null) n = (x.payments || []).length;
     saveFile(buildContractPdf(x, n), safeName("Kontrak " + contractNo(x, n) + " - " + (x.client || "")) + ".pdf", "application/pdf");
   }
+  // paket rumahan & paket custom tidak membutuhkan booking / pelunasan venue
+  function noVenue(x){ if (!x) return false; if (x.custom) return true; const t = x.templateId && state.templates[x.templateId]; return /rumahan/i.test((x.templateId || "") + " " + (x.packageName || "") + " " + (t ? t.name || "" : "")); }
   function isNoCat(x){ const t = x && x.templateId && state.templates[x.templateId]; return !!((t && t.noCatering) || (x && x.noCatering)); }
   function trxPkgLabel(x){ const t = x.templateId && state.templates[x.templateId]; return x.packageName || (t ? t.name : "-"); }
 
@@ -5425,7 +5503,7 @@
   const VB_ST = { belum: "Belum booking", proses: "Proses booking", booked: "Booked", batal: "Batal" };
   // pelunasan venue jatuh tempo H-1 bulan sebelum acara; diingatkan mulai 7 hari sebelumnya
   function venueDue(x){
-    const vb = x.venueBooking || {}; if (!x.date || vb.lunas || !(vb.status === "booked" || vb.status === "proses")) return null;
+    const vb = x.venueBooking || {}; if (!x.date || noVenue(x) || vb.lunas || !(vb.status === "booked" || vb.status === "proses")) return null;
     let due = addMonths(x.date, -1); const t0 = todayIso(); if (t0 < addDays(due, -7)) return null;
     const rest = Math.max(0, (+vb.cost || pkgVenueCost(x)) - (+vb.dp || 0));
     return { x, due, late: t0 > due, days: Math.abs(daysBetween(t0, due)), rest };
@@ -5443,7 +5521,7 @@
     const v = (x.vendors || []).filter(a => a.status !== "batal"), booked = v.filter(a => a.status === "booked").length, t0 = todayIso();
     const fits = (x.fittings || []).filter(f => f.status === "terjadwal"), nextFit = fits.filter(f => f.date >= t0).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0] || null;
     const inv = !!(x.invoice && (x.invoice.items || []).length), s = trxState(x), vb = (x.venueBooking || {}).status || "belum";
-    return { booked, act: v.length, nextFit, a2done: v.length > 0 && booked === v.length, inv, paidN: s.n, vb, a3done: inv && s.n > 0 && vb === "booked" && !!x.contractDone,
+    return { booked, act: v.length, nextFit, a2done: v.length > 0 && booked === v.length, inv, paidN: s.n, vb, a3done: inv && s.n > 0 && (vb === "booked" || noVenue(x)) && !!x.contractDone,
       new2: !(x.seen && x.seen.a2), new3: !(x.seen && x.seen.a3), s };
   }
   const invSig = x => (+x.price || 0) + "|" + (x.pax || 0) + "|" + (x.addons || []).map(a => a.name + ":" + a.price + ":" + addQ(a).qty).join(",");
@@ -5540,12 +5618,13 @@
       { t: "Input DP / full payment", d: st.paidN ? "Sudah " + (st.paidN + OF(x)) + "x bayar · " + rp(st.s.paid) : "Nominal, bank & bukti transfer", done: st.paidN > 0, go: "trx-bayar-" + id },
       { t: "Isi data kontrak & add-ons", d: x.contractDone ? (x.scheme === "full" ? "Full payment" : "DP " + rp(x.dp || 0)) + ((x.addons || []).length ? " · " + x.addons.length + " add-on" : "") : "Add-ons, skema pembayaran, batas pelunasan", done: !!x.contractDone, go: "trx-kontrak-" + id },
       { t: "Buat invoice", d: st.inv ? x.invoice.no + " · " + rp(trxTotal(x)) : "Otomatis dari paket & add-ons, bisa diedit", done: st.inv, go: "trx-invoice-" + id },
-      { t: "Booking & pelunasan venue", d: (x.venue || "-") + " · " + VB_ST[st.vb].toLowerCase() + (st.vb === "booked" ? ((x.venueBooking || {}).lunas ? " · lunas" : " · lunas H-1 bln") : ""), done: st.vb === "booked" && (!venueDue(x)), act: "venue" }];
+      noVenue(x) ? { t: "Booking & pelunasan venue", d: "Terkunci · " + (x.custom ? "paket custom" : "paket rumahan") + " tidak memakai venue", done: true, lock: true }
+        : { t: "Booking & pelunasan venue", d: (x.venue || "-") + " · " + VB_ST[st.vb].toLowerCase() + (st.vb === "booked" ? ((x.venueBooking || {}).lunas ? " · lunas" : " · lunas H-1 bln") : ""), done: st.vb === "booked" && (!venueDue(x)), act: "venue" }];
     const done = S.filter(z => z.done).length, nextI = S.findIndex(z => !z.done);
     return '<section class="card steps-card ' + k + '"><div class="sc-h"><span>' + admTag(k) + '<b>' + (done === S.length ? "Semua langkah selesai" : "Langkah yang perlu dikerjakan") + '</b></span><em>' + done + ' / ' + S.length + ' selesai</em></div>' +
       '<div class="sc-bar"><i style="width:' + Math.round(done / S.length * 100) + '%"></i></div><ol class="sc-list">' +
       S.map((z, i) => '<li class="' + (z.done ? "done" : i === nextI ? "next" : "") + '"><span class="sc-n">' + (z.done ? '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>' : i + 1) + '</span><span class="sc-t"><b>' + z.t + '</b><small>' + esc(z.d) + '</small></span>' +
-        '<button class="btn small' + (i === nextI ? " gold" : "") + '" ' + (z.go ? 'data-go="' + z.go + '"' : 'data-step="' + z.act + '"') + '>' + (z.done ? "Ubah" : i === nextI ? "Kerjakan" : "Buka") + '</button></li>').join("") + '</ol></section>';
+        (z.lock ? '<span class="tchip">Terkunci</span>' : '<button class="btn small' + (i === nextI ? " gold" : "") + '" ' + (z.go ? 'data-go="' + z.go + '"' : 'data-step="' + z.act + '"') + '>' + (z.done ? "Ubah" : i === nextI ? "Kerjakan" : "Buka") + '</button>') + '</li>').join("") + '</ol></section>';
   }
   function bindSteps(){
     $("tabBody").querySelectorAll("[data-step]").forEach(b => b.addEventListener("click", () => {
@@ -6779,7 +6858,8 @@
     const kH = '<section class="card tx-card"><h4>Data kontrak ' + admTag("a3") + '</h4>' + (x.contractDone ? '' : '<p class="tx-hint">Isi add-ons, skema DP / full payment, deadline pelunasan, dan rincian layanan.</p>') +
       rowKV("Skema", x.scheme === "full" ? "Full payment" : "DP " + rp(x.dp || 0)) + (x.scheme === "dp" ? rowKV("Batas maks. pelunasan", fmtDate(x.payDeadline || defDeadline(x))) : '') + rowKV("Status", x.contractDone ? '<span class="tchip ok">Lengkap</span>' : '<span class="tchip run">Perlu dilengkapi</span>') +
       '<div class="inv-act"><button class="btn small' + (x.contractDone ? "" : " gold") + '" data-go="trx-kontrak-' + x.id + '">' + svgI('<path d="M4 20h4L19 9l-4-4L4 16z"/>') + (x.contractDone ? "Ubah data kontrak" : "Lengkapi data kontrak") + '</button><button class="btn small" id="kPdf2">' + svgI('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>') + 'Kontrak PDF</button></div></section>';
-    h += '<div class="tx-detail"><div class="tx-col">' + ctaH + invH + schH + payH + '</div><div class="tx-col">' + kH + vbH + '</div></div>';
+    const vbLock = noVenue(x) ? '<section class="card tx-card vb-card nc-freeze" aria-disabled="true"><h4>Booking venue ' + admTag("a3") + '</h4><div class="nc-lock">' + svgI('<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>') + '<b>Booking & pelunasan venue terkunci</b><span>' + (x.custom ? "Paket custom" : "Paket rumahan") + ' tidak membutuhkan booking venue' + (x.venue ? ' (lokasi: ' + esc(x.venue) + ')' : '') + '.</span></div></section>' : vbH;
+    h += '<div class="tx-detail"><div class="tx-col">' + ctaH + invH + schH + payH + '</div><div class="tx-col">' + kH + vbLock + '</div></div>';
     $("tabBody").innerHTML = h; bindSteps();
     const T = $("tabBody");
     bindLateButtons();
