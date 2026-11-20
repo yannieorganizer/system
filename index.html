@@ -3829,9 +3829,8 @@
     $("lgAdmList").querySelectorAll("[data-adm]").forEach(b => b.onclick = () => showPin("admin", b.dataset.adm));
     $("lgRoles").hidden = true; $("lgPin").hidden = true; $("lgAdmins").hidden = false; }
   function showPin(role, uidSel){
-    if (role === "admin" && !uidSel) { showAdmins(); return; }
-    pinRole = role; pinUid = uidSel || "owner"; pinBuf = ""; drawPin(); $("pinErr").textContent = ""; $("lgAdmins").hidden = true;
-    $("lgPinLabel").innerHTML = "Masuk sebagai <b>" + esc((userById(pinUid) || {}).name || ROLE_NAME[role]) + "</b>";
+    pinRole = role; pinUid = role === "admin" ? (uidSel || "*admin") : (uidSel || "owner"); pinBuf = ""; drawPin(); $("pinErr").textContent = ""; $("lgAdmins").hidden = true;
+    $("lgPinLabel").innerHTML = "Masuk sebagai <b>" + esc(role === "admin" ? "Admin" : (userById(pinUid) || {}).name || ROLE_NAME[role]) + "</b>";
     const ri = document.querySelector('[data-role="' + role + '"] .lx-ri'); $("lxAvIc").innerHTML = ri ? ri.innerHTML : ""; $("pinDots").classList.remove("ok", "shake");
     $("lgRoles").hidden = true; $("lgPin").hidden = false;
   }
@@ -3844,8 +3843,9 @@
     else if (pinBuf.length < 4) pinBuf += k;
     $("pinErr").textContent = ""; drawPin();
     if (pinBuf.length === 4) {
-      const U = userById(pinUid), ok = U && U.active !== false && await checkUserPin(U, pinBuf);
-      if (ok) { const r = pinRole; pinRole = null; $("pinDots").classList.add("ok"); await new Promise(res => setTimeout(res, 420)); setRole(r); setUid(U.id); showRoles(); go("beranda"); toast("Selamat datang, " + U.name); logEvent("masuk"); }
+      let U = pinUid === "*admin" ? null : userById(pinUid), ok = U && U.active !== false && await checkUserPin(U, pinBuf);
+      if (pinUid === "*admin") { for (const a of teamList().filter(u => u.role === "admin" && u.active !== false)) { if (await checkUserPin(a, pinBuf)) { U = a; ok = true; break; } } }
+      if (ok) { const r = pinRole; pinRole = null; $("pinDots").classList.add("ok"); await new Promise(res => setTimeout(res, 420)); setRole(r); setUid(U.id); setOp(null); showRoles(); go("beranda"); toast("Selamat datang" + (r === "owner" ? ", " + U.name : "")); logEvent("masuk"); }
       else { $("pinDots").classList.add("shake"); $("pinErr").textContent = "PIN salah, coba lagi"; setTimeout(() => { $("pinDots").classList.remove("shake"); pinBuf = ""; drawPin(); }, 450); }
     }
   }
@@ -3954,7 +3954,7 @@
       if (id === "pakai-dekorasi") { const t0 = todayIso(), n = trxList().filter(x => x.date && daysBetween(t0, x.date) >= 0 && daysBetween(t0, x.date) <= 3 && !(x.dekorUse && x.dekorUse.out)).length; return n ? n + " perlu siap" : ""; }
       if (id === "pakai-busana") { const t0 = todayIso(), n = trxList().filter(x => x.date && x.wbPack && x.wbPack.out && !x.wbPack.back && daysBetween(t0, x.date) < 0).length; return n ? n + " belum kembali" : ""; }
     } catch (e) {} return ""; }
-  function inputAdminPanel(M){ const AD = ["Input Transaksi Client", "Jadwal Fitting & Book. Vendor", "Invoice & Kontrak", "Admin Wardrobe", "Admin Dekorasi"];
+  function inputAdminPanel(M){ const AD = ["Input Transaksi Client", "Fitting & Book. Vendor", "Invoice & Kontrak", "Admin Wardrobe", "Admin Dekorasi"];
     return '<section class="adm-panel"><div class="adm-head"><div><small>Kolom kerja tim</small><h3>Input Admin</h3></div><div class="adm-flow">' + M.map((m, i) => '<i>' + (i + 1) + '</i>').join('<em></em>') + '</div></div><div class="adm-cols">' +
       M.map((m, i) => { const live = LIVE.has(m.id), nn = m.id === "fitting" || m.id === "finance" ? trxList().filter(x => stageInfo(x)[m.id === "fitting" ? "new2" : "new3"]).length : 0, wn = modWarn(m.id);
         return '<button class="adm-tile' + (live ? " live" : "") + '" data-go="' + m.id + '" style="--d:' + (i * 60) + 'ms"><span class="at-no">0' + (i + 1) + '</span><span class="at-ic">' + svgI(m.icon) + '</span><b class="at-t">' + AD[i] + '</b><span class="at-ft"><em class="' + (nn || wn ? "new" : live ? "on" : "") + '">' + (nn ? nn + " baru" : wn || (live ? "Aktif" : "Segera hadir")) + '</em><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>'; }).join("") + '</div></section>'; }
@@ -4206,7 +4206,7 @@
   const userById = id => teamList().find(u => u.id === id) || null;
   const getUid = () => { try { return sessionStorage.getItem("yannie-uid") || ""; } catch (e) { return window.__uid || ""; } };
   const setUid = id => { try { id ? sessionStorage.setItem("yannie-uid", id) : sessionStorage.removeItem("yannie-uid"); } catch (e) {} window.__uid = id; };
-  function me(){ const u = userById(getUid()); if (u) return u; const r = getRole(); return r === "owner" ? userById("owner") : r ? { id: "admin", role: "admin", name: "Admin", jobdesk: "" } : null; }
+  function me(){ const u = userById(getUid()); if (u) return u.role === "admin" ? Object.assign({}, u, { name: "Admin", jobdesk: "" }) : u; const r = getRole(); return r === "owner" ? userById("owner") : r ? { id: "admin", role: "admin", name: "Admin", jobdesk: "" } : null; }
   const meName = () => { const u = me(); return u ? u.name : ""; };
   // operator = karyawan yang absen hari ini di perangkat ini (dari link /absen) atau dipilih manual
   const OP_K = "yannie-op", OP_S = "yannie-op-s";
@@ -4503,7 +4503,7 @@
     const revM = M.map(m => evs.filter(e => ymOf(e.event.date) === m).reduce((s, e) => s + totals(e).revenue, 0));
     const right = owner ? '<div class="mz-perf"><div class="mz-perf-h"><span>Business Performance</span>' + (revM[4] ? growth(revM[5], revM[4]).replace("mz-g", "mz-g chip") : '') + '</div>' + sparkLine(revM) + '<span class="mz-mo">' + M.map(m => '<i>' + ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"][+m.slice(5) - 1] + '</i>').join("") + '</span><small>Pendapatan bulan ini</small><b>' + shortRp(revM[5]) + '</b></div>' : heroNext();
     const H = new Date().getHours(), sub = H < 11 ? "Mari ciptakan momen yang tak terlupakan hari ini." : H < 15 ? "Setiap detail kecil membentuk hari yang sempurna." : H < 18 ? "Satu langkah lagi menuju pernikahan impian client." : "Terima kasih atas kerja hebat hari ini.";
-    return '<section class="mz-hero"><span class="mz-hero-bg" id="mzHeroBg"></span><div class="mz-hero-tx"><h1>' + greet() + ', <span>' + esc(opName() || (((me() || {}).name || ROLE_NAME[role]).split(" ")[0] === "Admin" ? (me() || {}).name : ((me() || {}).name || ROLE_NAME[role]).split(" ")[0])) + '.</span></h1>' + (role !== "owner" ? '<button class="mz-op" data-opk="1">' + svgI('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>') + (opName() ? esc((me() || {}).name || "Admin") + ' · ganti nama' : 'Pilih nama Anda') + '</button>' : '') + '<p class="mz-sub">' + sub + '</p><p class="mz-date">' + svgI('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>') + fmtDateLong(t0) + '</p></div>' + right + '</section>'; }
+    return '<section class="mz-hero"><span class="mz-hero-bg" id="mzHeroBg"></span><div class="mz-hero-tx"><h1>' + greet() + ',<br><span>' + esc(opName() || (((me() || {}).name || ROLE_NAME[role]).split(" ")[0] === "Admin" ? (me() || {}).name : ((me() || {}).name || ROLE_NAME[role]).split(" ")[0])) + '.</span></h1>' + (role !== "owner" ? '<button class="mz-op" data-opk="1">' + svgI('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>') + (opName() ? esc((me() || {}).name || "Admin") + ' · ganti nama' : 'Pilih nama Anda') + '</button>' : '') + '<p class="mz-sub">' + sub + '</p><p class="mz-date">' + svgI('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>') + fmtDateLong(t0) + '</p></div>' + right + '</section>'; }
   function mzStats(owner, wk, thisWk, nextWk){ const M = lastMonths(6), evs = eventList(), T = trxList(), D = dealTrx();
     const sEv = M.map(m => evs.filter(e => ymOf(e.event.date) === m).length), sCl = M.map(m => T.filter(x => ymOf(x.dealDate || x.createdAt || "") === m).length);
     const sRev = M.map(m => evs.filter(e => ymOf(e.event.date) === m).reduce((s, e) => s + totals(e).revenue, 0)), sPr = M.map(m => evs.filter(e => ymOf(e.event.date) === m).reduce((s, e) => s + totals(e).profit, 0));
