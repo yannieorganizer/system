@@ -2341,6 +2341,12 @@
   .vb-card.nc-freeze .nc-lock{padding:56px 28px 24px}
   .vb-card.nc-freeze .nc-lock svg{width:24px;height:24px;fill:none;stroke:var(--gold);stroke-width:1.8}
   .vb-card.nc-freeze .nc-lock span{max-width:420px;font-size:13px;color:var(--muted);line-height:1.5}
+  .dt-cks{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  .dt-ck{text-transform:none!important;letter-spacing:0!important;font-weight:500!important;margin:0!important;display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);cursor:pointer;user-select:none;width:max-content;max-width:100%}
+  .dt-ck input{width:16px;height:16px;accent-color:var(--gold);margin:0;flex:none;cursor:pointer}
+  .dt-ck span{margin-left:8px} .dt-ck input{position:static!important;opacity:1!important}
+  .dt-ck:hover{color:var(--text)} .dt-ck.off{opacity:.45;pointer-events:none}
+  .dp-wrap.dp-off .dp-input{cursor:not-allowed;font-weight:600;color:var(--gold)}
 </style>
 </head>
 <body data-view="login">
@@ -4234,7 +4240,7 @@
       if (x.tbc) return '<td class="rc-ven"><span class="tbc-chip" title="Paket belum dipilih · venue terkunci">🔒 TBC</span></td>';
       return plain ? '<td class="rc-ven"><span class="vn">' + nm + '</span></td>' : '<td class="rc-ven"><span class="vd ' + vb + '">' + dot(vb) + '<span class="vn">' + nm + '</span></span></td>'; };
     const paxCell = x => { const tp = trxPax(x), ap = trxAddPax(x); return '<td class="r rc-pax"' + (ap ? ' title="' + x.pax + ' pax paket + ' + ap + ' pax buffet catering"' : '') + '>' + (tp || "-") + (ap ? '<small>+' + ap + ' buffet</small>' : '') + '</td>'; };
-    const base = (x, plain) => (rcSel ? '<td class="rc-n rc-ck"><input type="checkbox" tabindex="-1"' + (rcSel.has(x.id) ? " checked" : "") + ' aria-label="Pilih client"></td>' : '<td class="rc-n"></td>') + '<td class="rc-c1"><b>' + esc(properCase(x.cpp && x.cpp.name || "-")) + '</b></td><td class="rc-c2"><b>' + esc(properCase(x.cpw && x.cpw.name || "-")) + '</b></td><td class="rc-d">' + fmtDMY(x.date) + '</td><td class="rc-pk">' + esc(trxPkgLabel(x)) + '</td>' + venCell(x, plain) + paxCell(x);
+    const base = (x, plain) => (rcSel ? '<td class="rc-n rc-ck"><input type="checkbox" tabindex="-1"' + (rcSel.has(x.id) ? " checked" : "") + ' aria-label="Pilih client"></td>' : '<td class="rc-n"></td>') + '<td class="rc-c1"><b>' + esc(properCase(x.cpp && x.cpp.name || "-")) + '</b></td><td class="rc-c2"><b>' + esc(properCase(x.cpw && x.cpw.name || "-")) + '</b></td><td class="rc-d">' + (x.date ? fmtDMY(x.date) : evTbc(x) === "TBC" ? '<span class="tbc-chip">TBC</span>' : "-") + '</td><td class="rc-pk">' + esc(trxPkgLabel(x)) + '</td>' + venCell(x, plain) + paxCell(x);
     const stChip = s => s.lunas ? '<span class="tchip ok">Lunas</span>' : s.late ? '<span class="tchip late">Telat bayar</span>' : '<span class="tchip run">Belum lunas</span>';
     const headBase = '<th class="rc-n">No</th><th class="rc-c1">CPP</th><th class="rc-c2">CPW</th><th class="rc-dth"><button type="button" class="rc-dbtn' + (rcMonth ? " on" : "") + '" data-dfil title="Filter tanggal event per bulan">' + (rcMonth ? esc(new Date(+rcMonth.slice(0, 4), +rcMonth.slice(5, 7) - 1, 1).toLocaleDateString("id-ID", { month: "short", year: "numeric" })) + (rcWeek ? " · M" + rcWeek : "") : "Tgl. event") + svgI('<path d="m6 9 6 6 6-6"/>') + '</button></th><th>Paket</th><th>Venue</th><th class="r">Pax</th>';
     let body, head;
@@ -4511,7 +4517,7 @@
     let y = drawKop(d, lj, ML, MR) - 6; const ensure = n => { if (y + n > H - BOT) { d.addPage(); y = TOP; } };
     const T = "BRIEFING DEKORASI & KONSEP ACARA", tw = d.width(T, 12.5, true);
     d.text(T, W / 2, y + 11, { size: 12.5, bold: true, color: INK, align: "center" }); d.line(W / 2 - tw / 2, y + 14, W / 2 + tw / 2, y + 14, INK, 0.8); y += 20;
-    d.text(coupleName(x) + " · " + (x.date ? fmtDateLong(x.date) : "-") + " · " + (x.venue || "-"), W / 2, y + 9, { size: 9, color: BODY, align: "center", maxW: CW }); y += 12;
+    d.text(coupleName(x) + " · " + (x.date ? fmtDateLong(x.date) : evTbc(x)) + " · " + (x.venue || "-"), W / 2, y + 9, { size: 9, color: BODY, align: "center", maxW: CW }); y += 12;
     d.text("Status: " + (b.status === "final" ? "FINAL (dikonfirmasi client)" : "DRAFT") + "  ·  " + ADM.a5 + (b.by ? " · " + b.by : "") + "  ·  dicetak " + dkNow(), W / 2, y + 8, { size: 7.8, color: MUTED, align: "center" }); y += 20;
     const head = (n, t) => { ensure(40); d.rect(ML, y, 3, 13, GOLD); d.text(n + ".  " + t.toUpperCase(), ML + 9, y + 10, { size: 9.4, bold: true, color: INK }); y += 20; };
     const para = (t, sz) => { wrap(t, CW, sz || 9).forEach(l => { ensure(13); d.text(l, ML, y + 9, { size: sz || 9, color: BODY }); y += 12.4; }); };
@@ -4772,7 +4778,7 @@
   const DAY = 864e5;
   const nowMs = () => Date.now() + (window.__tShift || 0);
   const todayIso = () => { const d = new Date(nowMs()); return isoOf(d.getFullYear(), d.getMonth(), d.getDate()); };
-  const dIso = iso => { const p = iso.split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); };
+  const dIso = iso => { if (!iso) return new Date(NaN); const p = iso.split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); };
   const daysBetween = (a, b) => Math.round((dIso(b) - dIso(a)) / DAY);
   const hhmm = ms => new Date(ms).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
   function addMonths(iso, n){ const p = iso.split("-").map(Number), f = new Date(p[0], p[1] - 1 + n, 1), last = new Date(f.getFullYear(), f.getMonth() + 1, 0).getDate(); return isoOf(f.getFullYear(), f.getMonth(), Math.min(p[2], last)); }
@@ -4795,6 +4801,7 @@
   const trxTotal = x => { const g = trxGross(x), c = cbInfo(x); return c ? Math.max(0, g - c.amount) : g; };
   const trxPaid = x => (x.payments || []).reduce((a, b) => a + (+b.amount || 0), 0);
   const trxList = () => Object.values(data.transactions || {}).filter(x => x && !x.demo && x.payments);
+  const evTbc = x => (x && ((x.akad && x.akad.tbc) || (x.resepsi && x.resepsi.tbc))) ? "TBC" : "-";
   const evDateOf = x => (x.resepsi && x.resepsi.date) || (x.akad && x.akad.date) || x.date || "";
   const addDays = (iso, n) => { const t = dIso(iso); t.setDate(t.getDate() + n); return isoOf(t.getFullYear(), t.getMonth(), t.getDate()); };
   // batas maksimal pelunasan: H-2 minggu sebelum acara
@@ -4806,21 +4813,21 @@
     let rows;
     if (x.scheme === "full") rows = [[{ key: "full", label: "Full payment", short: "Full payment" }, total, deal]];
     else {
-      const dp = Math.min(+x.dp || 0, total), ev = evDateOf(x), dl = x.payDeadline || defDeadline(x) || deal;
-      const due = m => { let d = ev ? addMonths(ev, -m) : deal; if (d < deal) d = deal; if (d > dl) d = dl; return d; };
+      const dp = Math.min(+x.dp || 0, total), ev = evDateOf(x), dl = x.payDeadline || defDeadline(x) || (ev ? deal : "");
+      const due = m => { if (!ev && !x.payDeadline) return ""; let d = ev ? addMonths(ev, -m) : deal; if (d < deal) d = deal; if (dl && d > dl) d = dl; return d; };
       const a2 = Math.max(0, Math.round(total * .7) - dp);
       rows = [[TERMS[0], dp, deal], [TERMS[1], a2, due(2)], [Object.assign({}, TERMS[2], { max: dl }), Math.max(0, total - dp - a2), due(1)]];
     }
     let cum = 0;
     return rows.map((r, i) => {
       const T = r[0], amt = r[1], dueD = r[2], start = cum; cum += amt; const cover = Math.max(0, Math.min(amt, paid - start));
-      const st = amt <= 0 ? "skip" : cover >= amt ? "paid" : t0 > dueD ? "late" : cover > 0 ? "part" : "wait";
+      const st = amt <= 0 ? "skip" : cover >= amt ? "paid" : dueD && t0 > dueD ? "late" : cover > 0 ? "part" : "wait";
       return Object.assign({}, T, { idx: i, amount: amt, due: dueD, cum, cover, status: st, lateDays: st === "late" ? daysBetween(dueD, t0) : 0, overMax: !!(T.max && st !== "paid" && amt > 0 && t0 > T.max) });
     });
   }
   function trxState(x){
     const sch = trxSchedule(x), total = trxTotal(x), paid = trxPaid(x), t0 = todayIso();
-    const dueNow = sch.filter(s => s.amount > 0 && s.due < t0).reduce((a, s) => Math.max(a, s.cum), 0);
+    const dueNow = sch.filter(s => s.amount > 0 && s.due && s.due < t0).reduce((a, s) => Math.max(a, s.cum), 0);
     const short = Math.max(0, dueNow - paid), late = sch.filter(s => s.status === "late");
     return { sch, total, paid, rest: Math.max(0, total - paid), short, late: short > 0, lateTerm: late[late.length - 1] || null, firstLate: late[0] || null,
       next: sch.find(s => s.amount > 0 && s.status !== "paid") || null, lunas: total > 0 && paid >= total, n: (x.payments || []).length };
@@ -5025,7 +5032,7 @@
     rich("**PIHAK PERTAMA** dan **PIHAK KEDUA** secara bersama-sama selanjutnya disebut **PARA PIHAK**.", ML, CW);
     rich("**PIHAK PERTAMA** dan **PIHAK KEDUA** menerangkan terlebih dahulu hal-hal sebagai berikut:", ML, CW); y += 4;
     const ds = [x.akad.date, x.resepsi.date].filter(Boolean).sort(), d0 = ds[0] || evDateOf(x), d1 = ds[ds.length - 1] || d0;
-    const nDays = d0 && d1 ? daysBetween(d0, d1) + 1 : 1, fd = iso => iso ? fmtDateLong(iso) : dot;
+    const nDays = d0 && d1 ? daysBetween(d0, d1) + 1 : 1, fd = iso => iso ? fmtDateLong(iso) : evTbc(x) === "TBC" ? "TBC (akan dikonfirmasi)" : dot;
     const bullet = txt => { ensure(LH * 2); d.rect(ML + 6, y + 6, 3.4, 3.4, INK); rich(txt, ML + 20, CW - 20); y += 2; };
     bullet("Bahwa **PIHAK PERTAMA** adalah penyedia jasa EVENT / WEDDING ORGANIZER yang akan mengadakan Event Wedding **PIHAK KEDUA**.");
     bullet("Jangka waktu penyelenggaraan event wedding dilakukan selama (" + nDays + " hari), terhitung sejak **(" + fd(d0) + ")** sampai dengan tanggal **(" + fd(d1) + ")**. Bahwa **PIHAK KEDUA** meminta dan menyerahkan event wedding kepada **PIHAK PERTAMA** keseluruhan dari awal sampai akhir acara. Untuk pelaksanaan perjanjian ini, **PIHAK PERTAMA** dan **PIHAK KEDUA** sepakat untuk mengikatkan diri dalam perjanjian ini dengan syarat-syarat dan ketentuan sebagai berikut:");
@@ -5243,7 +5250,7 @@
     h += '<section class="tx-list">' + (list.length ? list.map(o => {
       const x = o.x, s = o.s, pc = s.total ? Math.min(100, Math.round(s.paid / s.total * 100)) : 0;
       return '<button class="trx-item' + (s.late ? " late" : "") + '" data-go="trx-' + x.id + '">' +
-        '<span class="sch-date"><b>' + (x.date ? +x.date.slice(8) : "–") + '</b><small>' + (x.date ? fmtDate(x.date).split(" ")[1] + " " + x.date.slice(2, 4) : "") + '</small></span>' +
+        '<span class="sch-date"><b>' + (x.date ? +x.date.slice(8) : evTbc(x) === "TBC" ? "TBC" : "–") + '</b><small>' + (x.date ? fmtDate(x.date).split(" ")[1] + " " + x.date.slice(2, 4) : "") + '</small></span>' +
         '<span class="ti-main"><b>' + esc(coupleName(x)) + '</b><small>' + esc(trxPkgLabel(x)) + '</small><span class="ti-bar"><i style="width:' + pc + '%"></i></span>' +
         '<small class="ti-pay">' + rp(s.paid) + ' dari ' + rp(s.total) + ' · ' + pc + '%</small>' + stageChips(x, stageInfo(x)) + '</span>' +
         '<span class="ti-side">' + statusChip(s) + '<small>' + (s.late ? "kurang " + shortRp(s.short) : s.lunas ? "Pembayaran ke-" + (s.n + OF(x)) : s.next ? s.next.short + " · " + fmtDate(s.next.due) : "") + '</small><small class="ti-no">' + esc(curContractNo(x)) + '</small></span></button>';
@@ -5323,8 +5330,8 @@
         '<div class="field"><label for="f_address">Alamat rumah</label><textarea class="inp tx-note sm" id="f_address" data-k="address" placeholder="Jalan, RT/RW, kelurahan, kecamatan, kota">' + esc(fm.address) + '</textarea></div>' +
         '<div class="sign-box"><div class="field"><label>Penanda tangan kontrak (Pihak Kedua)</label><div class="seg" data-seg="signOf"><button type="button" data-v="cpp">CPP</button><button type="button" data-v="cpw">CPW</button></div><small class="tx-hint">Nama, tempat &amp; tanggal lahir, alamat, dan pekerjaan ini tercetak di surat perjanjian.</small></div>' +
         '<div class="g3">' + fIn("signer.pob", "Tempat lahir", "mis. Bekasi") + dpField("fDob", "Tanggal lahir", fm.signer.dob) + fIn("signer.job", "Pekerjaan", "mis. Karyawan Swasta") + '</div></div></section>' +
-      '<section class="card tx-sec"><h4><i>4</i>Tanggal &amp; jam acara</h4><div class="g2">' + dpField("fAkad", "Tanggal akad", fm.akad.date) + timePair("akad", "Jam akad") + '</div>' +
-        '<div class="g2">' + dpField("fResepsi", "Tanggal resepsi", fm.resepsi.date) + timePair("resepsi", "Jam resepsi") + '</div>' +
+      '<section class="card tx-sec"><h4><i>4</i>Tanggal &amp; jam acara</h4><div class="g2">' + dpField("fAkad", "Tanggal akad", fm.akad.date).replace(/<\/div>$/, '<div class="dt-cks"><label class="dt-ck"><input type="checkbox" id="fAkadTbc"' + (fm.akad.tbc ? " checked" : "") + '><span>Tanggal akad belum pasti (TBC)</span></label></div></div>') + timePair("akad", "Jam akad") + '</div>' +
+        '<div class="g2">' + dpField("fResepsi", "Tanggal resepsi", fm.resepsi.date).replace(/<\/div>$/, '<div class="dt-cks"><label class="dt-ck"><input type="checkbox" id="fSameDay"' + (fm.resepsi.same ? " checked" : "") + '><span>Tanggal resepsi sama dengan tanggal akad</span></label><label class="dt-ck"><input type="checkbox" id="fResTbc"' + (fm.resepsi.tbc ? " checked" : "") + '><span>Tanggal resepsi belum pasti (TBC)</span></label></div></div>') + timePair("resepsi", "Jam resepsi") + '</div>' +
         '<div class="g2"><div class="field"><label>Venue</label><input class="inp locked" id="fVenue2" readonly tabindex="-1" placeholder="otomatis mengikuti paket" value="' + esc(fm.venue) + '"></div>' +
         '<div class="field"><label>Pax</label><input class="inp locked" id="fPax2" readonly tabindex="-1" placeholder="otomatis mengikuti paket" value="' + (fm.pax || "") + '"></div></div></section>' +
       '</div><aside class="card tx-side" id="fSide"></aside></div>';
@@ -5336,8 +5343,23 @@
       if (fm.custom) setTimeout(() => { const n = $("fCName"); if (n) n.focus(); }, 30);
       $("fVenue2").value = fm.venue; $("fPax2").value = fm.pax || ""; renderFormPkg(); renderFormSide();
     });
-    mountDp("fAkad", () => fm.akad.date, iso => { fm.akad.date = iso; renderFormSide(); });
-    mountDp("fResepsi", () => fm.resepsi.date, iso => { fm.resepsi.date = iso; renderFormSide(); });
+    mountDp("fAkad", () => fm.akad.date, iso => { fm.akad.date = iso; if (iso) fm.akad.tbc = false; syncDates(); renderFormSide(); });
+    mountDp("fResepsi", () => fm.resepsi.date, iso => { fm.resepsi.date = iso; if (iso) fm.resepsi.tbc = false; syncDates(); renderFormSide(); });
+    // TBC tanggal & resepsi = akad
+    function syncDates(){
+      if (fm.resepsi.same) { fm.resepsi.date = fm.akad.date; fm.resepsi.tbc = !!fm.akad.tbc; }
+      const setI = (id, locked, txt) => { const i = $(id); i.classList.toggle("locked", locked); i.closest(".dp-wrap").classList.toggle("dp-off", locked); i.value = txt; };
+      setI("fAkad", !!fm.akad.tbc, fm.akad.tbc ? "TBC · belum pasti" : fm.akad.date ? fmtDateLong(fm.akad.date) : "");
+      const rl = !!(fm.resepsi.same || fm.resepsi.tbc);
+      setI("fResepsi", rl, fm.resepsi.tbc ? "TBC · belum pasti" : fm.resepsi.date ? fmtDateLong(fm.resepsi.date) : fm.resepsi.same ? "Mengikuti tanggal akad" : "");
+      $("fAkadTbc").checked = !!fm.akad.tbc; $("fSameDay").checked = !!fm.resepsi.same; $("fResTbc").checked = !!fm.resepsi.tbc; $("fResTbc").disabled = !!fm.resepsi.same;
+      $("fResTbc").closest(".dt-ck").classList.toggle("off", !!fm.resepsi.same);
+    }
+    ["fAkad", "fResepsi"].forEach(id => $(id).closest(".dp-wrap").addEventListener("click", e => { if (e.currentTarget.classList.contains("dp-off")) { e.stopPropagation(); e.preventDefault(); } }, true));
+    $("fAkadTbc").addEventListener("change", e => { fm.akad.tbc = e.target.checked; if (fm.akad.tbc) fm.akad.date = ""; syncDates(); renderFormSide(); });
+    $("fResTbc").addEventListener("change", e => { fm.resepsi.tbc = e.target.checked; if (fm.resepsi.tbc) fm.resepsi.date = ""; syncDates(); renderFormSide(); });
+    $("fSameDay").addEventListener("change", e => { fm.resepsi.same = e.target.checked; if (!fm.resepsi.same) { fm.resepsi.tbc = false; } syncDates(); renderFormSide(); });
+    syncDates();
     { const yy = new Date().getFullYear(); mountDp("fDob", () => fm.signer.dob, iso => { fm.signer.dob = iso; }, { years: [yy, 1940], defView: (yy - 25) + "-01-01" }); }
     bindUpload($("fKtp"), p => { fmKtp = p; });
     $("apMain").querySelectorAll("[data-ktpview]").forEach(b => b.addEventListener("click", () => openProof(b.dataset.ktpview)));
@@ -5427,7 +5449,8 @@
     if (!fm.cpp.name) return need("f_cpp_name", "Isi nama lengkap CPP");
     if (!fm.cpw.name) return need("f_cpw_name", "Isi nama lengkap CPW");
     if (!fm.cpp.phone && !fm.cpw.phone) return need("f_cpw_phone", "Isi minimal satu nomor HP (CPP atau CPW)");
-    if (!fm.akad.date && !fm.resepsi.date) { toast("Isi tanggal akad atau tanggal resepsi"); $("fAkad").click(); return; }
+    if (fm.resepsi.same) { fm.resepsi.date = fm.akad.date; fm.resepsi.tbc = !!fm.akad.tbc; }
+    if (!fm.akad.date && !fm.resepsi.date && !fm.akad.tbc && !fm.resepsi.tbc) { toast("Isi tanggal akad atau resepsi, atau centang TBC bila belum pasti"); $("fAkad").click(); return; }
     const ex = data.transactions[fm.id], now = new Date().toISOString(), role = getRole();
     const addons = ex ? (ex.addons || []) : [];
     const id = ex ? ex.id : uid("trx"), k = fm.ktpOf === "cpp" ? "cpp" : "cpw", oldIds = [fm.ktp.cpp, fm.ktp.cpw].filter(Boolean);
@@ -5435,7 +5458,7 @@
     if (fmKtp) { const pr = Object.assign({ id: uid("ktp"), trxId: id, kind: "ktp", at: now }, fmKtp, { name: "KTP " + k.toUpperCase() + " - " + (fm[k].name || "") });
       try { await putProof(pr); oldIds.forEach(o => { delete data.proofs[o]; if (db) db.collection("proofs").doc(o).delete().catch(() => {}); }); ktp = { [k]: pr.id }; } catch (err) { toast(err.message); } }
     const base = { cpp: Object.assign({}, ex ? ex.cpp : {}, { name: fm.cpp.name, phone: fm.cpp.phone }), cpw: Object.assign({}, ex ? ex.cpw : {}, { name: fm.cpw.name, phone: fm.cpw.phone }),
-      ktp, address: (fm.address || "").trim(), addressOf: fm.addressOf, signOf: fm.signOf || fm.addressOf, signer: { pob: (fm.signer.pob || "").trim(), dob: (fm.signer.dob || "").trim(), job: (fm.signer.job || "").trim() }, akad: { date: fm.akad.date, start: fm.akad.start || "", end: fm.akad.end || "" }, resepsi: { date: fm.resepsi.date, start: fm.resepsi.start || "", end: fm.resepsi.end || "" },
+      ktp, address: (fm.address || "").trim(), addressOf: fm.addressOf, signOf: fm.signOf || fm.addressOf, signer: { pob: (fm.signer.pob || "").trim(), dob: (fm.signer.dob || "").trim(), job: (fm.signer.job || "").trim() }, akad: { date: fm.akad.tbc ? "" : fm.akad.date, start: fm.akad.start || "", end: fm.akad.end || "", tbc: !!fm.akad.tbc }, resepsi: { date: fm.resepsi.tbc ? "" : fm.resepsi.date, start: fm.resepsi.start || "", end: fm.resepsi.end || "", tbc: !!fm.resepsi.tbc, same: !!fm.resepsi.same },
       templateId: fm.templateId, packageName: fm.packageName, venue: fm.venue, pax: fm.pax, price: fm.price, paxAdj: !!fm.paxAdj, custom: !!fm.custom, tbc: !!fm.tbc, noCatering: fm.custom ? !!fm.noCatering : !!(state.templates[fm.templateId] && state.templates[fm.templateId].noCatering), addons };
     if (fm.custom || fm.tbc) base.templateId = "";
     if (fm.tbc) { base.packageName = "TBC"; base.venue = "TBC"; }
@@ -5465,7 +5488,7 @@
     let h = backBtn("trx-" + id + "/finance", "Finance") +
       '<section class="tx-top"><div><div class="hm-kicker">' + admTag("a3") + ' · No. kontrak ' + esc(curContractNo(ex)) + '</div><h2>Data kontrak &amp; add-ons</h2><p>Isi add-ons, skema pembayaran (DP / full payment), rincian layanan, dan catatan client. Data dari Admin 1 sudah terisi otomatis.</p></div></section>' +
       '<div class="tx-form"><div class="tx-col">' +
-      '<section class="card tx-sec from-a1"><h4>Data dari Admin 1 ' + admTag("a1") + '</h4><div class="g2">' + rowKV("Pengantin", esc(coupleName(ex))) + rowKV("Paket", esc(trxPkgLabel(ex))) + rowKV("Akad", ex.akad.date ? fmtDate(ex.akad.date) + (ex.akad.start ? " · " + timeRange(ex.akad) : "") : "-") + rowKV("Resepsi", ex.resepsi.date ? fmtDate(ex.resepsi.date) + (ex.resepsi.start ? " · " + timeRange(ex.resepsi) : "") : "-") + '</div></section>' +
+      '<section class="card tx-sec from-a1"><h4>Data dari Admin 1 ' + admTag("a1") + '</h4><div class="g2">' + rowKV("Pengantin", esc(coupleName(ex))) + rowKV("Paket", esc(trxPkgLabel(ex))) + rowKV("Akad", ex.akad.date ? fmtDate(ex.akad.date) + (ex.akad.start ? " · " + timeRange(ex.akad) : "") : ex.akad.tbc ? "TBC" : "-") + rowKV("Resepsi", ex.resepsi.date ? fmtDate(ex.resepsi.date) + (ex.resepsi.start ? " · " + timeRange(ex.resepsi) : "") : ex.resepsi.tbc ? "TBC" : "-") + '</div></section>' +
       '<section class="card tx-sec"><h4><i>1</i>Add-ons</h4><p class="tx-hint">Permintaan client di luar paket. Masuk ke nilai transaksi, invoice, dan Profit per Event.</p><div id="fAddons"></div>' +
         '<button type="button" class="btn small" id="fAddAdd">' + svgI('<path d="M12 5v14M5 12h14"/>') + 'Tambah add-on</button></section>' +
       '<section class="card tx-sec"><h4><i>2</i>Skema pembayaran &amp; DP</h4>' +
@@ -5527,7 +5550,7 @@
       '<section class="card tx-sec"><h4><i>1</i>Data client <a class="h-link" href="#trx-' + id + '/client">Lihat data client</a></h4>' +
         '<div class="g2">' + ro("Nama CPP", x.cpp.name) + ro("Nama CPW", x.cpw.name) + '</div>' +
         '<div class="field"><label>Nomor WhatsApp client</label><div class="wa-row">' + waChip(x.cpp.phone, "CPP") + waChip(x.cpw.phone, "CPW") + '</div></div>' +
-        '<div class="g2">' + ro("Venue", x.venue) + ro("Tanggal acara", x.date ? fmtDateLong(x.date) : "-") + '</div></section>' +
+        '<div class="g2">' + ro("Venue", x.venue) + ro("Tanggal acara", x.date ? fmtDateLong(x.date) : evTbc(x)) + '</div></section>' +
       '<section class="card tx-sec"><h4><i>2</i>Pembayaran ke-' + (nextN + OF(x)) + '</h4>' +
         '<div class="field"><label>Jenis pembayaran</label><div class="seg big" id="pType">' + types.map(t => '<button type="button" data-v="' + t[0] + '">' + t[1] + '</button>').join("") + '</div></div>' +
         '<div class="g2"><div class="field"><label for="pAmt">Nominal ditransfer *</label>' + moneyInp("pAmt", defAmt(pType)) + '<div class="chips" id="pChips"></div></div>' + dpField("pDate", "Tanggal transfer *", t0) + '</div>' +
@@ -5647,7 +5670,7 @@
     const x = normContract(x0), st = stageInfo(x), s = st.s, owner = getRole() === "owner", t0 = todayIso(), dl = x.date ? daysBetween(t0, x.date) : null; const wa = waUrl(primaryPhone(x));
     let h = backBtn(tab === "vendor" ? "fitting" : tab === "finance" ? "finance" : tab === "wardrobe" ? "wardrobe" : "transaksi", tab === "vendor" ? "Fitting & vendor" : tab === "finance" ? "Finance" : tab === "wardrobe" ? "Busana & perlengkapan" : "Transaksi") +
       '<section class="tx-hero"><div class="th-main"><div class="hm-kicker">No. kontrak <b>' + esc(curContractNo(x)) + '</b></div><h2>' + esc(coupleName(x)) + '</h2>' +
-      '<p>' + esc(trxPkgLabel(x)) + '</p><div class="th-meta">' + statusChip(s) + '<span>' + svgI('<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>') + (x.date ? fmtDateLong(x.date) : "-") +
+      '<p>' + esc(trxPkgLabel(x)) + '</p><div class="th-meta">' + statusChip(s) + '<span>' + svgI('<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>') + (x.date ? fmtDateLong(x.date) : evTbc(x)) +
       (dl != null ? ' · ' + (dl > 0 ? "H-" + dl + " hari" : dl === 0 ? "hari ini" : "sudah lewat") : '') + '</span></div></div>' +
       '<div class="th-act"><button class="btn gold" data-go="trx-rekap-' + x.id + '">' + svgI('<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>') + 'Validasi hari-H</button>' + (st.inv ? '<button class="btn" id="dInv">' + svgI('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>') + 'Invoice PDF</button>' : '') +
       '<button class="btn' + (st.inv ? "" : " gold") + '" id="dPdf">' + svgI('<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>') + 'Kontrak PDF</button>' +
@@ -5741,7 +5764,7 @@
     let h = '<div class="tx-detail"><div class="tx-col"><section class="card tx-card"><h4>Calon pengantin ' + admTag("a1") + '<button class="btn small" data-go="trx-edit-' + x.id + '">' + svgI('<path d="M4 20h4L19 9l-4-4L4 16z"/>') + 'Edit</button></h4><div class="cp-grid">' + person("cpp", "Calon Pengantin Pria") + person("cpw", "Calon Pengantin Wanita") + '</div>' +
       rowKV("Alamat (" + (x.addressOf === "cpp" ? "CPP" : "CPW") + ")", esc(x.address || "-")) + (x.ktp && (x.ktp.cpp || x.ktp.cpw) ? '' : rowKV("KTP", '<span class="tchip late">Belum di-upload</span>')) + '</section></div>' +
       '<div class="tx-col">' + (x.tbc ? '<section class="card tx-card"><div class="tbc-box">' + svgI('<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>') + '<div><b>Paket masih TBC (To Be Confirmed)</b><span>Booking &amp; pelunasan venue terkunci sampai client memilih paket. Pilih paket lewat <b>Edit data client</b> — venue, pax, dan nilai paket terisi otomatis dan invoice ditandai untuk diperbarui.</span></div></div></section>' : '') + '<section class="card tx-card"><h4>Paket &amp; acara</h4>' + rowKV("Paket", x.tbc ? '<span class="tbc-chip">TBC</span> To Be Confirmed' : esc(trxPkgLabel(x))) + rowKV("Venue", x.tbc ? '<span class="tbc-chip">🔒 TBC</span> terkunci sampai paket dipilih' : esc(x.venue || "-")) + rowKV("Pax", trxPax(x) ? trxPax(x) + " pax" + (trxAddPax(x) ? " · " + x.pax + " paket + " + trxAddPax(x) + " buffet catering" : "") : "-") +
-      rowKV("Akad", x.akad.date ? fmtDate(x.akad.date) + (x.akad.start ? " · " + timeRange(x.akad) : "") : "-") + rowKV("Resepsi", x.resepsi.date ? fmtDate(x.resepsi.date) + (x.resepsi.start ? " · " + timeRange(x.resepsi) : "") : "-") +
+      rowKV("Akad", x.akad.date ? fmtDate(x.akad.date) + (x.akad.start ? " · " + timeRange(x.akad) : "") : x.akad.tbc ? '<span class="tbc-chip">TBC</span> tanggal belum pasti' : "-") + rowKV("Resepsi", x.resepsi.date ? fmtDate(x.resepsi.date) + (x.resepsi.same ? " (sama dengan akad)" : "") + (x.resepsi.start ? " · " + timeRange(x.resepsi) : "") : x.resepsi.tbc ? '<span class="tbc-chip">TBC</span> tanggal belum pasti' : "-") +
       rowKV("Nilai paket", rp(+x.price || 0)) + '<h5>Add-ons ' + admTag("a3") + '</h5>' + ((x.addons || []).length ? x.addons.map(a => rowKV(esc(a.name), rp(a.price))).join("") : '<p class="tx-hint">Belum ada add-on (diinput Admin 3 di Data kontrak).</p>') +
       rowKV("<b>Nilai transaksi</b>", rp((+x.price || 0) + trxAddTotal(x))) + (x.invoice && (x.invoice.items || []).length && invTotal(x.invoice) !== (+x.price || 0) + trxAddTotal(x) ? '<p class="tx-hint">Nilai di invoice Admin 3: <b>' + rp(invTotal(x.invoice)) + '</b> (sudah disesuaikan).</p>' : '') + '</section></div></div>';
     $("tabBody").innerHTML = h;
@@ -5889,7 +5912,7 @@
     P.nopick.forEach(o => { const k = o.g.who + " (" + wbEvL(o.g.ev).toLowerCase() + ")"; (by[k] = by[k] || { p: [], s: [] }).p.push(o.i.kind); });
     P.nosz.forEach(o => { const k = o.g.who + " (" + wbEvL(o.g.ev).toLowerCase() + ")"; (by[k] = by[k] || { p: [], s: [] }).s.push(o.i.kind); });
     const L = Object.keys(by).map(k => "• " + k + ": " + [by[k].p.length ? "pilihan model/warna " + by[k].p.join(", ") : "", by[k].s.length ? "ukuran " + by[k].s.join(", ") : ""].filter(Boolean).join("; "));
-    return "Assalamu'alaikum Bapak/Ibu " + coupleName(x) + ",\n\nKami dari tim wardrobe Yannie Wedding Organizer bermaksud mengonfirmasi data busana dan perlengkapan untuk acara pada " + (x.date ? fmtDateLong(x.date) : "-") + ". Berikut data yang masih kami perlukan:\n\n" + L.join("\n") + "\n\nMohon kesediaannya untuk menginformasikan pilihan dan ukuran tersebut, atau menjadwalkan fitting bersama tim kami. Terima kasih atas perhatian dan kerja samanya."; }
+    return "Assalamu'alaikum Bapak/Ibu " + coupleName(x) + ",\n\nKami dari tim wardrobe Yannie Wedding Organizer bermaksud mengonfirmasi data busana dan perlengkapan untuk acara pada " + (x.date ? fmtDateLong(x.date) : evTbc(x)) + ". Berikut data yang masih kami perlukan:\n\n" + L.join("\n") + "\n\nMohon kesediaannya untuk menginformasikan pilihan dan ukuran tersebut, atau menjadwalkan fitting bersama tim kami. Terima kasih atas perhatian dan kerja samanya."; }
   function wbRecapHtml(x){
     const P = wbPick(x), W = x.wardrobe || [], ph = typeof primaryPhone === "function" ? primaryPhone(x) : "";
     let h = '<section class="card tx-card wb-card wr-card"><h4>Rekap busana &amp; perlengkapan ' + admTag("a4") + '<span>' + (P.n ? P.pick + '/' + P.n + ' sudah dipilih' : 'belum diisi') + '</span></h4>' +
@@ -5996,7 +6019,7 @@
     const ensure = n => { if (y + n > H - BOT) { d.addPage(); y = TOP; } };
     const T = "REKAP BUSANA & CHECKLIST WARDROBE", tw = d.width(T, 12.5, true);
     d.text(T, W / 2, y + 11, { size: 12.5, bold: true, color: INK, align: "center" }); d.line(W / 2 - tw / 2, y + 14, W / 2 + tw / 2, y + 14, INK, 0.8); y += 20;
-    d.text(coupleName(x) + " · " + (x.date ? fmtDateLong(x.date) : "-") + " · " + (x.venue || "-"), W / 2, y + 9, { size: 9, color: BODY, align: "center", maxW: CW }); y += 12;
+    d.text(coupleName(x) + " · " + (x.date ? fmtDateLong(x.date) : evTbc(x)) + " · " + (x.venue || "-"), W / 2, y + 9, { size: 9, color: BODY, align: "center", maxW: CW }); y += 12;
     d.text("Dicetak " + nowStamp() + "  ·  Admin 4 · Busana & Perlengkapan", W / 2, y + 8, { size: 7.8, color: MUTED, align: "center" }); y += 18;
     const head = (n, t) => { ensure(44); d.rect(ML, y, 3, 13, GOLD); d.text(n + ".  " + t.toUpperCase(), ML + 9, y + 10, { size: 9.4, bold: true, color: INK }); y += 19; };
     const box = (bx, by, on) => { const s = 9; d.line(bx, by, bx + s, by, INK, 0.6); d.line(bx + s, by, bx + s, by + s, INK, 0.6); d.line(bx + s, by + s, bx, by + s, INK, 0.6); d.line(bx, by + s, bx, by, INK, 0.6); if (on) { d.line(bx + 2, by + 4.8, bx + 4, by + 7, OK, 1.2); d.line(bx + 4, by + 7, bx + 7.6, by + 2, OK, 1.2); } };
@@ -6335,7 +6358,7 @@
     let y = drawKop(d, lj, ML, MR) - 6; const ensure = n => { if (y + n > H - BOT) { d.addPage(); y = TOP; } };
     const T = "SURAT JALAN & CHECKLIST DEKORASI", tw = d.width(T, 12.5, true);
     d.text(T, W / 2, y + 11, { size: 12.5, bold: true, color: INK, align: "center" }); d.line(W / 2 - tw / 2, y + 14, W / 2 + tw / 2, y + 14, INK, 0.8); y += 20;
-    d.text(coupleName(x) + " · " + (x.date ? fmtDateLong(x.date) : "-") + " · " + (x.venue || "-"), W / 2, y + 9, { size: 9, color: BODY, align: "center", maxW: CW }); y += 12;
+    d.text(coupleName(x) + " · " + (x.date ? fmtDateLong(x.date) : evTbc(x)) + " · " + (x.venue || "-"), W / 2, y + 9, { size: 9, color: BODY, align: "center", maxW: CW }); y += 12;
     d.text("Dicetak " + dkNow() + "  ·  " + ADM.a5 + "  ·  " + S.n + " jenis aset, " + S.units + " unit", W / 2, y + 8, { size: 7.8, color: MUTED, align: "center" }); y += 18;
     const head = (n, t) => { ensure(44); d.rect(ML, y, 3, 13, GOLD); d.text(n + ".  " + t.toUpperCase(), ML + 9, y + 10, { size: 9.4, bold: true, color: INK }); y += 19; };
     const box = (bx, by, on) => { const s = 9; d.line(bx, by, bx + s, by, INK, 0.6); d.line(bx + s, by, bx + s, by + s, INK, 0.6); d.line(bx + s, by + s, bx, by + s, INK, 0.6); d.line(bx, by + s, bx, by, INK, 0.6); if (on) { d.line(bx + 2, by + 4.8, bx + 4, by + 7, OK, 1.2); d.line(bx + 4, by + 7, bx + 7.6, by + 2, OK, 1.2); } };
@@ -6545,7 +6568,7 @@
     let y = drawKop(d, lj, ML, MR) - 6; const ensure = n => { if (y + n > H - BOT) { d.addPage(); y = TOP; } };
     const T = "SURAT JALAN & TANDA TERIMA ASET BUSANA", tw = d.width(T, 12.5, true);
     d.text(T, W / 2, y + 11, { size: 12.5, bold: true, color: INK, align: "center" }); d.line(W / 2 - tw / 2, y + 14, W / 2 + tw / 2, y + 14, INK, 0.8); y += 20;
-    d.text(coupleName(x) + " · " + (x.date ? fmtDateLong(x.date) : "-") + " · " + (x.venue || "-"), W / 2, y + 9, { size: 9, color: BODY, align: "center", maxW: CW }); y += 12;
+    d.text(coupleName(x) + " · " + (x.date ? fmtDateLong(x.date) : evTbc(x)) + " · " + (x.venue || "-"), W / 2, y + 9, { size: 9, color: BODY, align: "center", maxW: CW }); y += 12;
     d.text("Dicetak " + nowStamp() + "  ·  " + ADM.a4 + (P.out ? "  ·  Keluar " + P.out.at : ""), W / 2, y + 8, { size: 7.8, color: MUTED, align: "center" }); y += 18;
     const head = (n, t) => { ensure(44); d.rect(ML, y, 3, 13, GOLD); d.text(n + ".  " + t.toUpperCase(), ML + 9, y + 10, { size: 9.4, bold: true, color: INK }); y += 19; };
     const box = (bx, by, on) => { const s = 9; d.line(bx, by, bx + s, by, INK, 0.6); d.line(bx + s, by, bx + s, by + s, INK, 0.6); d.line(bx + s, by + s, bx, by + s, INK, 0.6); d.line(bx, by + s, bx, by, INK, 0.6); if (on) { d.line(bx + 2, by + 4.8, bx + 4, by + 7, OK, 1.2); d.line(bx + 4, by + 7, bx + 7.6, by + 2, OK, 1.2); } };
@@ -7019,7 +7042,7 @@
       '<div class="tx-form"><div class="tx-col">' +
       '<section class="card tx-sec"><h4><i>1</i>Halaman 1 · Invoice</h4><div class="g3">' +
         '<div class="field"><label>No. invoice</label><input class="inp locked" readonly tabindex="-1" value="' + esc(ivf.no || nextInvoiceNo(ivf.date) + " (otomatis)") + '"></div>' + dpField("ivDate", "Tanggal invoice", ivf.date) + dpField("ivDue", "Jatuh tempo", ivf.due) + '</div>' +
-        '<div class="inv-bill"><div><small>Ditagihkan kepada</small><b>' + esc(coupleName(x)) + '</b><span>' + esc([x.cpp.phone, x.cpw.phone].filter(Boolean).join(" · ") || "-") + '</span><span>' + esc(x.address || "") + '</span></div><div><small>Acara</small><b>' + (x.date ? fmtDateLong(x.date) : "-") + '</b><span>' + esc(x.venue || "-") + (x.pax ? " · " + x.pax + " pax" : "") + '</span><span>Kontrak ' + esc(curContractNo(x)) + '</span></div></div>' +
+        '<div class="inv-bill"><div><small>Ditagihkan kepada</small><b>' + esc(coupleName(x)) + '</b><span>' + esc([x.cpp.phone, x.cpw.phone].filter(Boolean).join(" · ") || "-") + '</span><span>' + esc(x.address || "") + '</span></div><div><small>Acara</small><b>' + (x.date ? fmtDateLong(x.date) : evTbc(x)) + '</b><span>' + esc(x.venue || "-") + (x.pax ? " · " + x.pax + " pax" : "") + '</span><span>Kontrak ' + esc(curContractNo(x)) + '</span></div></div>' +
         '<div class="iv-tbl"><div class="iv-h"><span>Deskripsi</span><span>Qty</span><span>Harga</span><span class="r">Jumlah</span><span></span></div><div id="ivItems"></div></div>' +
         '<div class="iv-tools"><button type="button" class="btn small" id="ivAdd">' + svgI('<path d="M12 5v14M5 12h14"/>') + 'Tambah baris</button><button type="button" class="btn small ghost" id="ivReset">' + svgI('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>') + 'Isi ulang dari paket &amp; add-ons</button></div>' +
         '<div class="g2"><div class="field"><label for="ivDisc">Diskon</label>' + moneyInp("ivDisc", ivf.discount) + '</div><div></div></div>' +
@@ -7123,7 +7146,7 @@
       ["CPW (calon pengantin wanita)", (x.cpw.name || "-") + (x.cpw.phone ? " (" + x.cpw.phone + ")" : "")],
       ["Alamat", (x.address || "-").replace(/\s*\n\s*/g, ", ")],
       ["Penanda tangan kontrak", (x.signOf === "cpp" ? "CPP" : "CPW") + " · " + ((x[x.signOf === "cpp" ? "cpp" : "cpw"] || {}).name || "-")],
-      ["Akad", d(x.akad.date) + " · " + jam(x.akad)], ["Resepsi", d(x.resepsi.date) + " · " + jam(x.resepsi)],
+      ["Akad", (x.akad.tbc && !x.akad.date ? "TBC" : d(x.akad.date)) + " · " + jam(x.akad)], ["Resepsi", (x.resepsi.tbc && !x.resepsi.date ? "TBC" : d(x.resepsi.date)) + " · " + jam(x.resepsi)],
       ["Venue", x.venue || "-"], ["Paket", trxPkgLabel(x)],
       ["Jumlah tamu", tp ? fmt(tp) + " pax" + (ap ? " (" + fmt(tp - ap) + " paket + " + fmt(ap) + " buffet catering)" : "") : "-"],
       ["No. kontrak", curContractNo(x)], ["No. invoice", inv ? inv.no : "Belum dibuat"],
@@ -7187,7 +7210,7 @@
         sec.rows.map((r, i) => '<tr' + (sec.flag ? ' class="' + sec.flag[i] + '"' : '') + '>' + r.map((v, k) => '<td class="' + (sec.cols[k][2] || "") + '">' + esc(v) + '</td>').join("") + '</tr>').join("") + '</tbody>' +
         (sec.foot ? '<tfoot>' + sec.foot.map(f => '<tr class="' + (f[2] || "") + '"><td colspan="' + (sec.cols.length - 1) + '">' + f[0] + '</td><td class="r">' + f[1] + '</td></tr>').join("") + '</tfoot>' : '') + '</table></div>' + (sec.note ? '<p class="hh-note">' + esc(sec.note) + '</p>' : ''); };
     let h = backBtn("trx-" + id + "/client", "Detail client") +
-      '<section class="tx-hero hh-hero"><div class="th-main"><div class="hm-kicker">Lembar validasi hari-H</div><h2>' + esc(coupleName(x)) + '</h2><p>' + (x.date ? fmtDateLong(x.date) : "-") + ' · ' + esc(x.venue || "-") + '</p></div>' +
+      '<section class="tx-hero hh-hero"><div class="th-main"><div class="hm-kicker">Lembar validasi hari-H</div><h2>' + esc(coupleName(x)) + '</h2><p>' + (x.date ? fmtDateLong(x.date) : evTbc(x)) + ' · ' + esc(x.venue || "-") + '</p></div>' +
       '<div class="th-act"><button class="btn gold" id="hhPdf">' + svgI('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>') + 'Unduh PDF</button></div></section>' +
       '<section class="card hh-ready"><div class="hh-rh"><div><small>Kesiapan hari-H</small><b>' + D.okN + ' / ' + D.C.length + ' poin tervalidasi</b></div><em class="' + (pct === 100 ? "ok" : pct >= 60 ? "mid" : "bad") + '">' + (pct === 100 ? "Siap hari-H" : "Belum siap · " + (D.C.length - D.okN) + " poin tersisa") + '</em></div>' +
       '<div class="hh-bar"><i style="width:' + pct + '%"></i></div><div class="hh-checks">' + D.C.map(c => '<div class="hh-ck ' + (c[1] ? "ok" : "no") + '">' + ic(c[1]) + '<span><b>' + c[0] + '</b><small>' + esc(c[2]) + '</small></span></div>').join("") + '</div></section>';
@@ -7205,7 +7228,7 @@
     const ensure = n => { if (y + n > H - BOT) { d.addPage(); y = TOP; } };
     const tw = d.width("LEMBAR VALIDASI HARI-H", 12.5, true);
     d.text("LEMBAR VALIDASI HARI-H", W / 2, y + 11, { size: 12.5, bold: true, color: INK, align: "center" }); d.line(W / 2 - tw / 2, y + 14, W / 2 + tw / 2, y + 14, INK, 0.8); y += 20;
-    d.text("Rekap lengkap kebutuhan client · " + coupleName(x) + " · " + (x.date ? fmtDateLong(x.date) : "-"), W / 2, y + 9, { size: 9, color: BODY, align: "center", maxW: CW }); y += 12;
+    d.text("Rekap lengkap kebutuhan client · " + coupleName(x) + " · " + (x.date ? fmtDateLong(x.date) : evTbc(x)), W / 2, y + 9, { size: 9, color: BODY, align: "center", maxW: CW }); y += 12;
     d.text("No. kontrak " + curContractNo(x) + "  ·  dicetak " + fmtDateLong(todayIso()).split(", ")[1], W / 2, y + 8, { size: 7.8, color: MUTED, align: "center" }); y += 18;
     const head = (n, t) => { ensure(44); d.rect(ML, y, 3, 13, GOLD); d.text(n + ".  " + t.toUpperCase(), ML + 9, y + 10, { size: 9.4, bold: true, color: INK }); y += 19; };
     const grid = (cols, rows, o) => { o = o || {}; const tot = cols.reduce((a, c) => a + c[1], 0), X = []; let cx = ML; cols.forEach(c => { const w = c[1] / tot * CW; X.push([cx, w]); cx += w; });
@@ -7333,7 +7356,7 @@
     d.addPage(); y = drawKop(d, lj, ML, MR);
     title("RINCIAN CATERING", "Lampiran Invoice Nomor: " + inv.no);
     const ct = inv.catering || { items: [] };
-    kv([["Pengantin", coupleName(x), true], ["Tanggal acara", x.date ? fmtDateLong(x.date) : "-"], ["Venue", x.venue || "-"], ["Paket", trxPkgLabel(x)], ["Jumlah pax / porsi", fmt(+ct.pax || trxPax(x) || 0) + " pax", true]], ML, 104, CW);
+    kv([["Pengantin", coupleName(x), true], ["Tanggal acara", x.date ? fmtDateLong(x.date) : evTbc(x)], ["Venue", x.venue || "-"], ["Paket", trxPkgLabel(x)], ["Jumlah pax / porsi", fmt(+ct.pax || trxPax(x) || 0) + " pax", true]], ML, 104, CW);
     y += 12;
     const items = (ct.items || []).filter(c => (c.name || "").trim()).map(c => Object.assign({}, c, { kind: normKind(c.kind) })).sort((a, b) => CAT_KIND.indexOf(a.kind) - CAT_KIND.indexOf(b.kind));
     const rows = []; let lk = null, no2 = 0;
@@ -7356,11 +7379,11 @@
   // ================= HALAMAN MODUL ADMIN 2 & ADMIN 3 =================
   const stageChips = (x, st) => '<span class="stc">' + (st.new2 ? '<i class="stc-new">Baru A2</i>' : '<i class="' + (st.a2done ? "ok" : "") + '">Vendor ' + st.booked + '/' + st.act + '</i>') +
     (st.new3 ? '<i class="stc-new">Baru A3</i>' : '<i class="' + (st.inv ? "ok" : "") + '">Invoice ' + (st.inv ? "✓" : "–") + '</i><i class="' + (st.vb === "booked" ? "ok" : "") + '">Venue ' + (st.vb === "booked" ? "✓" : "–") + '</i>') + '</span>';
-  const evDateChip = x => '<span class="sch-date"><b>' + (x.date ? +x.date.slice(8) : "–") + '</b><small>' + (x.date ? fmtDate(x.date).split(" ")[1] + " " + x.date.slice(2, 4) : "") + '</small></span>';
+  const evDateChip = x => '<span class="sch-date"><b>' + (x.date ? +x.date.slice(8) : evTbc(x) === "TBC" ? "TBC" : "–") + '</b><small>' + (x.date ? fmtDate(x.date).split(" ")[1] + " " + x.date.slice(2, 4) : "") + '</small></span>';
   function newTasksSec(list, k, tab){
     if (!list.length) return "";
     return '<section class="pnotif info task"><span class="pn-ic">' + svgI('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>') + '</span><div class="pn-tx"><b>' + list.length + ' transaksi baru dari Admin 1</b><p>Menunggu diproses ' + ADM[k] + '.</p><div class="pn-list">' +
-      list.slice(0, 6).map(x => '<div class="pn-item"><span><b>' + esc(coupleName(x)) + '</b><small>' + (x.date ? fmtDate(x.date) : "-") + ' · ' + esc(x.venue || trxPkgLabel(x)) + '</small></span><button class="btn small gold" data-go="trx-' + x.id + '/' + tab + '">Proses</button></div>').join("") + '</div></div></section>';
+      list.slice(0, 6).map(x => '<div class="pn-item"><span><b>' + esc(coupleName(x)) + '</b><small>' + (x.date ? fmtDate(x.date) : evTbc(x)) + ' · ' + esc(x.venue || trxPkgLabel(x)) + '</small></span><button class="btn small gold" data-go="trx-' + x.id + '/' + tab + '">Proses</button></div>').join("") + '</div></div></section>';
   }
   let vendAll = false;
   function vendorBookingHtml(){
