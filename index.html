@@ -2344,6 +2344,7 @@
   .dt-cks{display:flex;flex-direction:column;gap:6px;margin-top:8px}
   .dt-ck{text-transform:none!important;letter-spacing:0!important;font-weight:500!important;margin:0!important;display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);cursor:pointer;user-select:none;width:max-content;max-width:100%}
   .dt-ck input{width:16px;height:16px;accent-color:var(--gold);margin:0;flex:none;cursor:pointer}
+  .vb-pr{background:color-mix(in srgb,var(--gold) 12%,transparent);color:var(--hi);border:1px dashed var(--gold);margin-left:6px}
   .dt-ck span{margin-left:8px} .dt-ck input{position:static!important;opacity:1!important}
   .dt-ck:hover{color:var(--text)} .dt-ck.off{opacity:.45;pointer-events:none}
   .dp-wrap.dp-off .dp-input{cursor:not-allowed;font-weight:600;color:var(--gold)}
@@ -2726,6 +2727,7 @@
       NC("rumahan-platinum-1", "Wedding Package Rumahan — Platinum 1", 53000000, { group: "Rumahan" }),
       NC("rumahan-platinum-2", "Wedding Package Rumahan — Platinum 2", 60000000, { group: "Rumahan" }),
       NC("rumahan-spekta", "Wedding Package Rumahan — Spekta", 67000000, { group: "Rumahan", free: ["Softlens normal", "White henna dan fake nails", "Saxophone"] }),
+      pkg({ id: "rias-busana", fullName: "Paket Rias Busana", venue: "Lokasi client", pax: 0, price: 0, noVenue: true, noCatering: true, venueOpen: true, group: "Rias Busana", only: ["rias"], dekor: [], food: [], free: [] }),
       pkg({ id: "rumahan-catering-500", fullName: "Wedding Package Rumahan + Catering All In 500 Pax", venue: "Lokasi client", pax: 500, price: 84500000, noVenue: true, venueOpen: true, group: "Rumahan",
         dekor: dekor("6 meter", [...DEKOR_BASE, "Set akad", "Dekor photobooth", "Galeri foto"]), food: FOOD_STD, free: ["Softlens normal", "White henna dan fake nails"] }),
       NC("outdoor-non-catering", "Wedding Package Outdoor — Non Catering", 34000000, { group: "Non Catering" }),
@@ -3335,7 +3337,7 @@
     if (o.custom && typeof o.custom.name === "string") o.custom.name = textCase(o.custom.name);
     if (o.venueBooking && o.venueBooking.venue) o.venueBooking.venue = textCase(o.venueBooking.venue);
     (o.addons || []).forEach(a => { if (a && a.name) a.name = textCase(a.name); });
-    (o.vendors || []).forEach(v => { if (v && v.name) v.name = textCase(v.name); });
+    (o.vendors || []).forEach(v => { if (v && v.name) v.name = textCase(v.name); if (v && /^rias[\s&]*(dan\s*|&\s*)?busana$/i.test((v.cat || "").trim())) v.cat = "MUA"; });
     if (o.invoice) { (o.invoice.items || []).forEach(i => { if (i && i.desc) { let d = textCase(i.desc); const m = d.match(/\s—\s(\d[\d.]*)\s*pax$/i); if (m && new RegExp("\\b" + m[1].replace(/\./g, "\\.") + "\\s*pax\\b", "i").test(d.slice(0, m.index))) d = d.slice(0, m.index); i.desc = d; } }); const c = o.invoice.catering; if (c && c.items) c.items.forEach(i => { if (i && i.name) i.name = textCase(i.name); });
       if (sig0 && o.invoice.sig === sig0) o.invoice.sig = sigF(o); }
     return o; }
@@ -4248,7 +4250,7 @@
       head = headBase + cats.map(c => '<th class="rc-v">' + esc(c) + '</th>').join("") + '<th>H- acara</th><th>Status</th>';
       body = L.map(x => { const s = trxState(x), dl = x.date ? daysBetween(t0, x.date) : null;
         return '<tr ' + rcRowAttr(x, "client") + ' data-q="' + esc(rcKey(x)) + '">' + base(x) + cats.map(c => { const v = (x.vendors || []).find(q => properCase((q.cat || "").trim()).toLowerCase() === c.toLowerCase());
-          return '<td class="rc-v">' + (v ? '<span class="vd ' + v.status + '">' + dot(v.status) + '<span class="vn">' + (v.name ? esc(properCase(v.name)) : '<em>' + VEN_ST[v.status] + '</em>') + (v.name && v.status === "proses" ? '<em> · nego</em>' : '') + '</span></span>' : '<span class="vd none">—</span>') + '</td>'; }).join("") +
+          return '<td class="rc-v">' + (v ? '<span class="vd ' + v.status + '">' + dot(v.status) + '<span class="vn">' + (v.name ? esc(properCase(v.name)) : '<em>' + VEN_ST[v.status] + '</em>') + (v.name && v.status === "proses" ? '<em> · segera booking</em>' : '') + '</span></span>' : '<span class="vd none">—</span>') + '</td>'; }).join("") +
           '<td class="rc-h">' + (dl == null ? "-" : dl > 0 ? "H-" + dl : dl === 0 ? "Hari H" : "Selesai") + '</td><td>' + stChip(s) + '</td></tr>'; }).join("");
     } else {
       const nP = Math.max(5, ...L.map(x => (x.payments || []).length)), idx = Array.from({ length: nP }, (_, i) => i);
@@ -4390,7 +4392,7 @@
   let lastAct = 0, lastLog = null;
   ["pointerdown", "keydown", "change"].forEach(ev => document.addEventListener(ev, () => { lastAct = Date.now(); }, true));
   const NOLOG = new Set(["log", "dekorfoto", "proofs", "meta"]);
-  const PAGE_L = h => { if (!h) return ""; if (h.indexOf("trx-bayar-") === 0) return "Catat pembayaran"; if (h.indexOf("trx-invoice-") === 0) return "Invoice"; if (h.indexOf("trx-kontrak-") === 0) return "Data kontrak & add-ons"; if (h.indexOf("trx-edit-") === 0) return "Edit data client"; if (h === "trx-baru") return "Transaksi baru"; if (h === "trx-impor") return "Impor data";
+  const PAGE_L = h => { if (!h) return ""; if (h.indexOf("trx-bayar-") === 0) return "Catat pembayaran"; if (h.indexOf("trx-invoice-") === 0) return "Invoice"; if (h.indexOf("trx-kontrak-") === 0) return "Data kontrak"; if (h.indexOf("trx-edit-") === 0) return "Edit data client"; if (h === "trx-baru") return "Transaksi baru"; if (h === "trx-impor") return "Impor data";
     const m = h.match(/^trx-[^/]+\/(\w+)/); if (m) return { client: "Data client", finance: "Keuangan", vendor: "Booking vendor", fitting: "Fitting", wardrobe: "Wardrobe", dekorasi: "Dekorasi", hari: "Hari-H" }[m[1]] || "Detail client";
     if (h.indexOf("dk-") === 0) return "Aset dekorasi"; if (h.indexOf("bs-a-") === 0) return "Aset busana"; if (h.indexOf("pv-") === 0) return "Presentasi venue"; return (MOD[h] && MOD[h].name) || (h === "beranda" ? "Overview" : h); };
   function logLabel(c, v, id){ try { if (!v) v = {};
@@ -5164,7 +5166,7 @@
     saveFile(buildContractPdf(x, n), safeName("Kontrak " + contractNo(x, n) + " - " + (x.client || "")) + ".pdf", "application/pdf");
   }
   // paket rumahan & paket custom tidak membutuhkan booking / pelunasan venue
-  function noVenue(x){ if (!x) return false; if (x.custom || x.tbc) return true; const t = x.templateId && state.templates[x.templateId]; return /rumahan/i.test((x.templateId || "") + " " + (x.packageName || "") + " " + (t ? t.name || "" : "")); }
+  function noVenue(x){ if (!x) return false; if (x.custom || x.tbc) return true; const t = x.templateId && state.templates[x.templateId]; return /rumahan|rias[\s-]*(dan\s+|&\s*)?busana/i.test((x.templateId || "") + " " + (x.packageName || "") + " " + (t ? t.name || "" : "")); }
   function isNoCat(x){ const t = x && x.templateId && state.templates[x.templateId]; return !!((t && t.noCatering) || (x && x.noCatering)); }
   function trxPkgLabel(x){ if (x && x.tbc) return "TBC · To Be Confirmed"; const t = x.templateId && state.templates[x.templateId]; return x.packageName || (t ? t.name : "-"); }
 
@@ -5319,7 +5321,7 @@
       '<div class="tx-form"><div class="tx-col">' +
       '<section class="card tx-sec"><h4><i>1</i>Paket</h4>' +
         '<div class="field"><label for="fPkg">Paket yang diambil *</label><select id="fPkg" class="inp"><option value="">— Pilih paket —</option><option value="__tbc"' + (fm.tbc ? " selected" : "") + '>⏳ TBC · To Be Confirmed (paket belum dipilih)</option><option value="__custom"' + (fm.custom ? " selected" : "") + '>✎ Paket custom (isi sendiri)</option>' +
-        [["", "Paket gedung · all in"], ["Rumahan", "Paket rumahan"], ["Non Catering", "Paket non catering"]].map(g => { const L = tpls.filter(t => (t.group || "") === g[0]); return L.length ? '<optgroup label="' + g[1] + '">' + L.map(t => '<option value="' + t.id + '"' + (t.id === fm.templateId ? " selected" : "") + '>' + esc(t.name || "Paket tanpa nama") + (t.noCatering && t.group !== "Non Catering" ? " · Non Catering" : "") + '</option>').join("") + '</optgroup>' : ""; }).join("") + '</select></div>' +
+        [["", "Paket gedung · all in"], ["Rumahan", "Paket rumahan"], ["Non Catering", "Paket non catering"], ["Rias Busana", "Paket rias busana"]].map(g => { const L = tpls.filter(t => (t.group || "") === g[0]); return L.length ? '<optgroup label="' + g[1] + '">' + L.map(t => '<option value="' + t.id + '"' + (t.id === fm.templateId ? " selected" : "") + '>' + esc(t.name || "Paket tanpa nama") + (t.noCatering && t.group !== "Non Catering" && t.group !== "Rias Busana" ? " · Non Catering" : "") + '</option>').join("") + '</optgroup>' : ""; }).join("") + '</select></div>' +
         '<div class="g3" id="fPkgInfo"></div></section>' +
       '<section class="card tx-sec"><h4><i>2</i>Calon pengantin</h4><div class="cp-grid">' + person1("cpp", "Calon Pengantin Pria", "CPP") + person1("cpw", "Calon Pengantin Wanita", "CPW") + '</div>' +
         '<div class="ktp-box"><div class="field"><label>KTP (cukup salah satu)</label><div class="seg" data-seg="ktpOf"><button type="button" data-v="cpp">KTP CPP</button><button type="button" data-v="cpw">KTP CPW</button></div></div>' +
@@ -5486,23 +5488,19 @@
     const par = (k, short) => '<div class="cp-card"><div class="cp-h"><span>' + short + '</span><b>' + esc(fm[k].name || "-") + '</b></div><div class="g2">' + fIn(k + ".father", "Nama bapak", "Nama bapak " + short) + fIn(k + ".mother", "Nama ibu", "Nama ibu " + short) + '</div></div>';
     const timePair = (k, label) => '<div class="field"><label>' + label + (fm[k].date ? ' · ' + fmtDate(fm[k].date) : '') + '</label><div class="tpair"><input class="inp t24" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="--:--" data-k="' + k + '.start" value="' + esc(fm[k].start) + '" aria-label="' + label + ' mulai"><span>s/d</span><input class="inp t24" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="--:--" data-k="' + k + '.end" value="' + esc(fm[k].end) + '" aria-label="' + label + ' selesai"></div></div>';
     let h = backBtn("trx-" + id + "/finance", "Finance") +
-      '<section class="tx-top"><div><div class="hm-kicker">' + admTag("a3") + ' · No. kontrak ' + esc(curContractNo(ex)) + '</div><h2>Data kontrak &amp; add-ons</h2><p>Isi add-ons, skema pembayaran (DP / full payment), rincian layanan, dan catatan client. Data dari Admin 1 sudah terisi otomatis.</p></div></section>' +
+      '<section class="tx-top"><div><div class="hm-kicker">' + admTag("a3") + ' · No. kontrak ' + esc(curContractNo(ex)) + '</div><h2>Data kontrak</h2><p>Isi skema pembayaran (DP / full payment), rincian layanan, dan catatan client. Data dari Admin 1 sudah terisi otomatis.</p></div></section>' +
       '<div class="tx-form"><div class="tx-col">' +
       '<section class="card tx-sec from-a1"><h4>Data dari Admin 1 ' + admTag("a1") + '</h4><div class="g2">' + rowKV("Pengantin", esc(coupleName(ex))) + rowKV("Paket", esc(trxPkgLabel(ex))) + rowKV("Akad", ex.akad.date ? fmtDate(ex.akad.date) + (ex.akad.start ? " · " + timeRange(ex.akad) : "") : ex.akad.tbc ? "TBC" : "-") + rowKV("Resepsi", ex.resepsi.date ? fmtDate(ex.resepsi.date) + (ex.resepsi.start ? " · " + timeRange(ex.resepsi) : "") : ex.resepsi.tbc ? "TBC" : "-") + '</div></section>' +
-      '<section class="card tx-sec"><h4><i>1</i>Add-ons</h4><p class="tx-hint">Permintaan client di luar paket. Masuk ke nilai transaksi, invoice, dan Profit per Event.</p><div id="fAddons"></div>' +
-        '<button type="button" class="btn small" id="fAddAdd">' + svgI('<path d="M12 5v14M5 12h14"/>') + 'Tambah add-on</button></section>' +
-      '<section class="card tx-sec"><h4><i>2</i>Skema pembayaran &amp; DP</h4>' +
+      '<section class="card tx-sec"><h4><i>1</i>Skema pembayaran &amp; DP</h4>' +
         '<div class="field"><label>Pembayaran</label><div class="seg big" data-seg="scheme"><button type="button" data-v="dp">DP</button><button type="button" data-v="full">Full payment</button></div></div><div id="fDpBox"></div></section>' +
-      '<section class="card tx-sec"><h4><i>3</i>Rincian layanan paket</h4><p class="tx-hint">Satu baris = satu poin layanan.</p>' +
+      '<section class="card tx-sec"><h4><i>2</i>Rincian layanan paket</h4><p class="tx-hint">Satu baris = satu poin layanan.</p>' +
         '<textarea class="inp tx-note lg" id="f_services" data-k="services">' + esc(fm.services) + '</textarea>' +
         '<button type="button" class="btn small ghost" id="fSvcTpl">' + svgI('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>') + 'Pakai template standar</button></section>' +
-      '<section class="card tx-sec"><h4><i>4</i>Catatan tambahan dari client</h4><textarea class="inp tx-note" id="f_clientNote" data-k="clientNote" placeholder="mis. keluarga minta prosesi siraman">' + esc(fm.clientNote) + '</textarea></section>' +
+      '<section class="card tx-sec"><h4><i>3</i>Catatan tambahan dari client</h4><textarea class="inp tx-note" id="f_clientNote" data-k="clientNote" placeholder="mis. keluarga minta prosesi siraman">' + esc(fm.clientNote) + '</textarea></section>' +
       '</div><aside class="card tx-side"><h4>Kontrak</h4><div class="sd-no"><small>No. kontrak</small><b>' + esc(curContractNo(ex)) + '</b></div><div class="sd-couple"><small>Pengantin</small><b>' + esc(coupleName(ex)) + '</b></div>' +
         '<div class="sd-row"><span>Nilai transaksi</span><b>' + rp(trxTotal(ex)) + '</b></div><div class="sd-row"><span>Tanggal acara</span><b>' + (ex.date ? fmtDate(ex.date) : "-") + '</b></div>' +
         '<button class="btn gold sd-save" id="kSave">' + svgI('<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h8V3M8 21v-7h8v7"/>') + 'Simpan data kontrak</button></aside></div>';
     $("apMain").innerHTML = h;
-    $("fAddAdd").onclick = () => { if (!fm) return; if (!Array.isArray(fm.addons)) fm.addons = []; fm.addons.push({ id: uid("ad"), name: "", qty: 1, unit: 0, price: 0 }); renderFormAddons(); const r = $("fAddons").querySelectorAll("input.an"); if (r.length) r[r.length - 1].focus(); };
-    try { renderFormAddons(); } catch (e) { console.error(e); }
     try { bindFmInputs(); } catch (e) { console.error(e); }
     $("fSvcTpl").addEventListener("click", async () => { if (fm.services.trim() && fm.services !== SERVICES_TPL && !await ask("Ganti dengan template?", "Rincian layanan yang sudah diketik akan diganti template standar.", "Ya, ganti")) return; fm.services = SERVICES_TPL; $("f_services").value = SERVICES_TPL; });
     renderDpBox();
@@ -5510,9 +5508,6 @@
       fixNames(fm);
       const tot = trxTotal(ex);
       if (fm.scheme === "dp") { if (!fm.dp) { toast("Isi nominal DP"); $("fDp").focus(); return; } if (fm.dp > tot) { toast("DP melebihi nilai transaksi"); $("fDp").focus(); return; } }
-      ex.addons = fm.addons.filter(a => (a.name || "").trim() || a.price).map(a => { const q = +a.qty || 1, u = +a.unit || 0; return { id: a.id, name: (a.name || "").trim() || "Add-on", qty: q, unit: u, price: q * u, pax: 0 }; });
-      if (ex.invoice && (ex.invoice.items || []).length) { const keep = ex.invoice.items.filter(i => i.auto !== "add"); const pi = keep.findIndex(i => i.auto === "pkg");
-        const adds = ex.addons.map(a => ({ id: uid("ii"), desc: "Add-on: " + a.name, qty: 1, price: a.price, auto: "add" })); keep.splice(pi < 0 ? keep.length : pi + 1, 0, ...adds); ex.invoice.items = keep; ex.invoice.sig = invSig(ex); }
       Object.assign(ex, {
         scheme: fm.scheme, dp: fm.scheme === "dp" ? fm.dp : 0, payDeadline: fm.scheme === "dp" ? (fm.payDeadline || defDeadline(ex)) : "", dlManual: fm.scheme === "dp" && !fm.dlAuto,
         services: fm.services || "", clientNote: fm.clientNote || "", contractDone: true });
@@ -5595,18 +5590,19 @@
       if (x0.reminders) delete x0.reminders.chat;
       await putTrx(x0); payProof = null;
       go("trx-" + x0.id + "/finance");
-      if (first) { setTimeout(() => toast((PAY_TYPE[pType] || "Pembayaran") + " tercatat ✓ · lengkapi data kontrak & add-ons, lalu unduh invoice & kontrak dari halaman Invoice"), 80); return; }
+      if (first) { setTimeout(() => toast((PAY_TYPE[pType] || "Pembayaran") + " tercatat ✓ · lengkapi data kontrak, lalu unduh invoice & kontrak dari halaman Invoice"), 80); return; }
       setTimeout(async () => { if (await ask((PAY_TYPE[pType] || "Pembayaran") + " tercatat ✓", "Pembayaran ke-" + (n + OF(x0)) + " sebesar " + rp(amt) + " dari " + bank + ". Kontrak otomatis disesuaikan — No. kontrak sekarang " + pay.contractNo + (trxState(x0).lunas ? " (LUNAS)." : ".") + " Unduh kontrak terbaru?", "Unduh kontrak")) exportContract(x0, n); }, 80);
     });
   }
 
   // ================= DETAIL TRANSAKSI (hub 3 admin) =================
   const FIT_TYPES = ["Fitting 1", "Fitting 2", "Fitting final", "Test make-up", "Technical meeting", "Lainnya"];
-  const VEN_ST = { belum: "Belum dihubungi", proses: "Negosiasi", booked: "Booked", batal: "Tidak dipakai" };
+  const VEN_ST = { belum: "Sedang pilih", proses: "Segera booking", booked: "Booked", batal: "Tidak dipakai" };
+  const venCat = c => /^rias[\s&]*(dan\s*|&\s*)?busana$/i.test((c || "").trim()) ? "MUA" : c;
   const VB_ST = { belum: "Belum booking", proses: "Proses booking", booked: "Booked", batal: "Batal" };
   // pelunasan venue jatuh tempo H-1 bulan sebelum acara; diingatkan mulai 7 hari sebelumnya
   function venueDue(x){
-    const vb = x.venueBooking || {}; if (!x.date || noVenue(x) || vb.lunas || !(vb.status === "booked" || vb.status === "proses")) return null;
+    const vb = x.venueBooking || {}; if (!x.date || noVenue(x) || vb.pribadi || vb.lunas || !(vb.status === "booked" || vb.status === "proses")) return null;
     let due = addMonths(x.date, -1); const t0 = todayIso(); if (t0 < addDays(due, -7)) return null;
     const rest = Math.max(0, (+vb.cost || pkgVenueCost(x)) - (+vb.dp || 0));
     return { x, due, late: t0 > due, days: Math.abs(daysBetween(t0, due)), rest };
@@ -5618,7 +5614,7 @@
     const t = state.templates[x.templateId], skip = /operasional|venue|gedung|wedding organizer|^wo\b|free|bonus|menu after|gubukan/i;
     const cats = t ? t.categories.filter(c => !skip.test(c.name || "") && c.id !== "venue" && c.id !== "wo").map(c => (c.name || "").trim()).filter(Boolean) : [];
     const list = cats.length ? cats : ["Rias & busana", "Dekorasi", "Dokumentasi", "Hiburan / entertainment", "MC", "Catering"];
-    return list.map(n => ({ id: uid("vd"), cat: properCase(n), name: "", contact: "", status: "belum", date: "", note: "" }));
+    return list.map(n => ({ id: uid("vd"), cat: venCat(properCase(n)), name: "", contact: "", status: "belum", date: "", note: "" }));
   }
   function stageInfo(x){
     const v = (x.vendors || []).filter(a => a.status !== "batal"), booked = v.filter(a => a.status === "booked").length, t0 = todayIso();
@@ -5642,7 +5638,7 @@
       else { const nb = v.filter(a => a.status === "belum" || a.status === "proses").length; if (nb) out.push(nb + " dari " + v.filter(a => a.status !== "batal").length + " vendor belum booked"); }
     } else {
       if (!st.paidN && !st.s.lunas) out.push("DP / full payment belum diinput");
-      if (!x.contractDone) out.push("Data kontrak & add-ons belum diisi");
+      if (!x.contractDone) out.push("Data kontrak belum diisi");
       if (!st.inv) out.push("Invoice belum dibuat");
       if (st.vb !== "booked") out.push("Venue belum di-booking");
       const vd = venueDue(x); if (vd) out.push("Pelunasan venue " + (vd.late ? "telat " + vd.days + " hari" : "jatuh tempo " + fmtDate(vd.due)));
@@ -5719,11 +5715,11 @@
       { t: "Booking semua vendor", d: st.act ? st.booked + " dari " + st.act + " vendor sudah booked" : "Isi nama & kontak vendor", done: st.a2done, act: "ven" }]
       : [
       { t: "Input DP / full payment", d: st.paidN ? "Sudah " + (st.paidN + OF(x)) + "x bayar · " + rp(st.s.paid) : "Nominal, bank & bukti transfer", done: st.paidN > 0, go: "trx-bayar-" + id },
-      { t: "Isi data kontrak & add-ons", d: x.contractDone ? (x.scheme === "full" ? "Full payment" : "DP " + rp(x.dp || 0)) + ((x.addons || []).length ? " · " + x.addons.length + " add-on" : "") : "Add-ons, skema pembayaran, batas pelunasan", done: !!x.contractDone, go: "trx-kontrak-" + id },
+      { t: "Isi data kontrak", d: x.contractDone ? (x.scheme === "full" ? "Full payment" : "DP " + rp(x.dp || 0)) + ((x.addons || []).length ? " · " + x.addons.length + " add-on" : "") : "Skema pembayaran, batas pelunasan, rincian layanan", done: !!x.contractDone, go: "trx-kontrak-" + id },
       { t: "Buat invoice", d: st.inv ? x.invoice.no + " · " + rp(trxTotal(x)) : "Otomatis dari paket & add-ons, bisa diedit", done: st.inv, go: "trx-invoice-" + id },
       x.tbc ? { t: "Booking & pelunasan venue", d: "Terkunci · paket masih TBC, terbuka otomatis setelah client memilih paket", done: false, lock: true }
-        : noVenue(x) ? { t: "Booking & pelunasan venue", d: "Terkunci · " + (x.custom ? "paket custom" : "paket rumahan") + " tidak memakai venue", done: true, lock: true }
-        : { t: "Booking & pelunasan venue", d: (x.venue || "-") + " · " + VB_ST[st.vb].toLowerCase() + (st.vb === "booked" ? ((x.venueBooking || {}).lunas ? " · lunas" : " · lunas H-1 bln") : ""), done: st.vb === "booked" && (!venueDue(x)), act: "venue" }];
+        : noVenue(x) ? { t: "Booking & pelunasan venue", d: "Terkunci · " + (x.custom ? "paket custom" : /rias/i.test((x.templateId || "") + (x.packageName || "")) ? "paket Rias Busana" : "paket rumahan") + " tidak memakai venue", done: true, lock: true }
+        : { t: "Booking & pelunasan venue", d: (x.venue || "-") + " · " + VB_ST[st.vb].toLowerCase() + ((x.venueBooking || {}).pribadi ? " · venue pribadi (client bayar langsung)" + ((x.venueBooking || {}).clientPaid ? " · sudah bayar" : "") : st.vb === "booked" ? ((x.venueBooking || {}).lunas ? " · lunas" : " · lunas H-1 bln") : ""), done: st.vb === "booked" && (!venueDue(x)), act: "venue" }];
     const done = S.filter(z => z.done).length, nextI = S.findIndex(z => !z.done);
     return '<section class="card steps-card ' + k + '"><div class="sc-h"><span>' + admTag(k) + '<b>' + (done === S.length ? "Semua langkah selesai" : "Langkah yang perlu dikerjakan") + '</b></span><em>' + done + ' / ' + S.length + ' selesai</em></div>' +
       '<div class="sc-bar"><i style="width:' + Math.round(done / S.length * 100) + '%"></i></div><ol class="sc-list">' +
@@ -5765,7 +5761,7 @@
       rowKV("Alamat (" + (x.addressOf === "cpp" ? "CPP" : "CPW") + ")", esc(x.address || "-")) + (x.ktp && (x.ktp.cpp || x.ktp.cpw) ? '' : rowKV("KTP", '<span class="tchip late">Belum di-upload</span>')) + '</section></div>' +
       '<div class="tx-col">' + (x.tbc ? '<section class="card tx-card"><div class="tbc-box">' + svgI('<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>') + '<div><b>Paket masih TBC (To Be Confirmed)</b><span>Booking &amp; pelunasan venue terkunci sampai client memilih paket. Pilih paket lewat <b>Edit data client</b> — venue, pax, dan nilai paket terisi otomatis dan invoice ditandai untuk diperbarui.</span></div></div></section>' : '') + '<section class="card tx-card"><h4>Paket &amp; acara</h4>' + rowKV("Paket", x.tbc ? '<span class="tbc-chip">TBC</span> To Be Confirmed' : esc(trxPkgLabel(x))) + rowKV("Venue", x.tbc ? '<span class="tbc-chip">🔒 TBC</span> terkunci sampai paket dipilih' : esc(x.venue || "-")) + rowKV("Pax", trxPax(x) ? trxPax(x) + " pax" + (trxAddPax(x) ? " · " + x.pax + " paket + " + trxAddPax(x) + " buffet catering" : "") : "-") +
       rowKV("Akad", x.akad.date ? fmtDate(x.akad.date) + (x.akad.start ? " · " + timeRange(x.akad) : "") : x.akad.tbc ? '<span class="tbc-chip">TBC</span> tanggal belum pasti' : "-") + rowKV("Resepsi", x.resepsi.date ? fmtDate(x.resepsi.date) + (x.resepsi.same ? " (sama dengan akad)" : "") + (x.resepsi.start ? " · " + timeRange(x.resepsi) : "") : x.resepsi.tbc ? '<span class="tbc-chip">TBC</span> tanggal belum pasti' : "-") +
-      rowKV("Nilai paket", rp(+x.price || 0)) + '<h5>Add-ons ' + admTag("a3") + '</h5>' + ((x.addons || []).length ? x.addons.map(a => rowKV(esc(a.name), rp(a.price))).join("") : '<p class="tx-hint">Belum ada add-on (diinput Admin 3 di Data kontrak).</p>') +
+      rowKV("Nilai paket", rp(+x.price || 0)) + '<h5>Add-ons ' + admTag("a3") + '</h5>' + ((x.addons || []).length ? x.addons.map(a => rowKV(esc(a.name), rp(a.price))).join("") : '<p class="tx-hint">Belum ada add-on (ditambahkan Admin 3 lewat baris item di Invoice).</p>') +
       rowKV("<b>Nilai transaksi</b>", rp((+x.price || 0) + trxAddTotal(x))) + (x.invoice && (x.invoice.items || []).length && invTotal(x.invoice) !== (+x.price || 0) + trxAddTotal(x) ? '<p class="tx-hint">Nilai di invoice Admin 3: <b>' + rp(invTotal(x.invoice)) + '</b> (sudah disesuaikan).</p>' : '') + '</section></div></div>';
     $("tabBody").innerHTML = h;
     $("tabBody").querySelectorAll("[data-proof]").forEach(b => b.addEventListener("click", () => openProof(b.dataset.proof)));
@@ -6886,7 +6882,7 @@
       (function(){ const w = wbStats(x); return '<button type="button" class="wb-link" data-go="trx-' + x.id + '/wardrobe">' + svgI('<path d="M8 3 4 6l2 4 2-1v12h8V9l2 1 2-4-4-3a4 4 0 0 1-8 0z"/>') + '<span><b>Busana &amp; perlengkapan ' + admTag("a4") + '</b><small>' + (w.n ? w.groups + ' orang · ' + w.siap + '/' + w.n + ' item siap' : 'Baju akad & resepsi CPP, CPW, orang tua, among tamu — belum diisi') + '</small></span>' + svgI('<path d="m9 18 6-6-6-6"/>') + '</button>'; })() +
       '</section></div>' +
       '<div class="tx-col"><section class="card tx-card"><h4>Booking vendor<span>' + stageInfo(x).booked + '/' + stageInfo(x).act + ' booked</span></h4>' +
-      '<div class="ven-list">' + x.vendors.map(v => '<div class="ven ' + v.status + '" data-vid="' + v.id + '"><div class="ven-h"><input class="inp ven-cat" data-vf="cat" value="' + esc(properCase(v.cat)) + '" aria-label="Kategori vendor"><select class="inp ven-st" data-vf="status">' + Object.entries(VEN_ST).map(e => '<option value="' + e[0] + '"' + (v.status === e[0] ? " selected" : "") + '>' + e[1] + '</option>').join("") + '</select></div>' +
+      '<div class="ven-list">' + x.vendors.map(v => '<div class="ven ' + v.status + '" data-vid="' + v.id + '"><div class="ven-h"><input class="inp ven-cat" data-vf="cat" value="' + esc(properCase(v.cat)) + '" aria-label="Kategori vendor"><select class="inp ven-st" data-vf="status">' + Object.entries(VEN_ST).filter(e => e[0] !== "batal" || v.status === "batal").map(e => '<option value="' + e[0] + '"' + (v.status === e[0] ? " selected" : "") + '>' + e[1] + '</option>').join("") + '</select></div>' +
         '<div class="g2"><input class="inp" data-vf="name" placeholder="Nama vendor" value="' + esc(properCase(v.name)) + '"><input class="inp" data-vf="contact" placeholder="Kontak / no. HP vendor" value="' + esc(v.contact) + '"></div>' +
         '<div class="ven-f"><input class="inp" data-vf="note" placeholder="Catatan (paket vendor, DP vendor, dll.)" value="' + esc(v.note) + '"><button class="btn small ghost py-del" data-vdel="' + v.id + '" title="Hapus">' + svgI('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>') + '</button></div>' +
         (v.status === "booked" && v.date ? '<small class="ven-d">Booked ' + fmtDate(v.date) + '</small>' : '') + '</div>').join("") + '</div>' +
@@ -6918,7 +6914,7 @@
   // ---- ADMIN 3: finance (tab) ----
   let vbEdit = false;
   function renderTabFinance(x){
-    const st = stageInfo(x), s = st.s, vb = Object.assign({ status: "belum" }, x.venueBooking || {}), vbAuto = pkgVenueCost(x); if (!+vb.cost && vbAuto) vb.cost = vbAuto;
+    const st = stageInfo(x), s = st.s, vb = Object.assign({ status: "belum" }, x.venueBooking || {}), vbAuto = pkgVenueCost(x); if (!+vb.cost && vbAuto && !vb.pribadi) vb.cost = vbAuto;
     let h = stepsCard(x, "a3");
     if (s.late) { const chat = chatInfo(x, s); h += '<section class="pnotif warn"><span class="pn-ic">' + svgI('<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>') + '</span><div class="pn-tx"><b>Telat bayar · kurang ' + rp(s.short) + '</b>' +
       '<p>Termin <b>' + s.firstLate.label + '</b> jatuh tempo ' + fmtDate(s.firstLate.due) + ' (telat ' + s.firstLate.lateDays + ' hari).' + (chat ? ' Sudah dichat ' + chat.count + 'x · diingatkan lagi pukul ' + hhmm(chat.until) + '.' : '') + '</p>' +
@@ -6951,18 +6947,21 @@
       : '<p class="tx-hint">Invoice dibuat otomatis dari paket &amp; add-ons, lalu bisa diketik/diubah manual. Halaman 2 berisi rincian catering.</p><button class="btn gold sd-save" data-go="trx-invoice-' + x.id + '">' + svgI('<path d="M12 5v14M5 12h14"/>') + 'Buat invoice</button>') + '</section>';
     const vbH = '<section class="card tx-card vb-card ' + vb.status + '"><h4>Booking venue ' + admTag("a3") + '</h4><div class="vb-venue"><small>Venue dari paket</small><b>' + esc(x.venue || "-") + '</b><small>' + (x.date ? fmtDateLong(x.date) : "") + (x.pax ? " · " + x.pax + " pax" : "") + '</small></div>' +
       (vbEdit ? '<div class="field"><label>Status</label><div class="seg big" id="vbSt">' + Object.entries(VB_ST).map(e => '<button type="button" data-v="' + e[0] + '"' + (vb.status === e[0] ? ' class="on"' : '') + '>' + e[1] + '</button>').join("") + '</div></div>' +
-          '<div class="g2">' + dpField("vbDate", "Tanggal booking", vb.date || "") + '<div class="field"><label for="vbCost">Total biaya venue</label>' + moneyInp("vbCost", vb.cost) + '<small class="tx-hint">' + (vbAuto ? 'Otomatis dari paket ' + esc(trxPkgLabel(x)) + ' · ' + rp(vbAuto) + (+vb.cost !== vbAuto ? ' (diubah manual)' : '') : 'Biaya sewa venue belum diisi di paket (Profit per Event) — ketik manual') + '</small></div></div>' +
-          '<div class="g2"><div class="field"><label for="vbDp">DP venue dibayar</label>' + moneyInp("vbDp", vb.dp) + '</div><div class="field"><label>Pelunasan venue</label><label class="chk"><input type="checkbox" id="vbLunas"' + (vb.lunas ? " checked" : "") + '> Sudah lunas</label><small class="tx-hint">Jatuh tempo H-1 bulan' + (x.date ? " · " + fmtDate(addMonths(x.date, -1)) : "") + '</small></div></div>' +
+          '<div class="field"><label>Pembayaran venue</label><div class="seg big" id="vbMode"><button type="button" data-m="wo"' + (vb.pribadi ? '' : ' class="on"') + '>Lewat WO</button><button type="button" data-m="pribadi"' + (vb.pribadi ? ' class="on"' : '') + '>Venue pribadi</button></div><small class="tx-hint">Venue pribadi: tetap memakai paket Yannie, tetapi biaya venue dibayar client langsung ke pihak venue. Client cukup mengabari WO bila sudah bayar.</small></div>' +
+          '<div class="vb-prib"' + (vb.pribadi ? '' : ' hidden') + '><div class="g2">' + dpField("vbDate2", "Tanggal booking (oleh client)", vb.date || "") + '<div class="field"><label>Konfirmasi dari client</label><label class="chk"><input type="checkbox" id="vbClientPaid"' + (vb.clientPaid ? " checked" : "") + '> Client sudah bayar</label><small class="tx-hint">' + (vb.clientPaidDate ? "Dikonfirmasi " + fmtDate(vb.clientPaidDate) : "Centang setelah client memberi kabar") + '</small></div></div></div>' +
+          '<div class="vb-wo"' + (vb.pribadi ? ' hidden' : '') + '><div class="g2">' + dpField("vbDate", "Tanggal booking", vb.date || "") + '<div class="field"><label for="vbCost">Total biaya venue</label>' + moneyInp("vbCost", vb.cost) + '<small class="tx-hint">' + (vbAuto ? 'Otomatis dari paket ' + esc(trxPkgLabel(x)) + ' · ' + rp(vbAuto) + (+vb.cost !== vbAuto ? ' (diubah manual)' : '') : 'Biaya sewa venue belum diisi di paket (Profit per Event) — ketik manual') + '</small></div></div>' +
+          '<div class="g2"><div class="field"><label for="vbDp">DP venue dibayar</label>' + moneyInp("vbDp", vb.dp) + '</div><div class="field"><label>Pelunasan venue</label><label class="chk"><input type="checkbox" id="vbLunas"' + (vb.lunas ? " checked" : "") + '> Sudah lunas</label><small class="tx-hint">Jatuh tempo H-1 bulan' + (x.date ? " · " + fmtDate(addMonths(x.date, -1)) : "") + '</small></div></div></div>' +
           '<div class="g2"><div class="field"><label for="vbPic">PIC venue</label><input class="inp" id="vbPic" placeholder="Nama marketing venue" value="' + esc(vb.pic || "") + '"></div><div class="field"><label for="vbPhone">Kontak PIC</label><input class="inp" id="vbPhone" inputmode="tel" placeholder="08xx" value="' + esc(vb.phone || "") + '"></div></div>' +
           '<div class="field"><label for="vbNote">Catatan</label><input class="inp" id="vbNote" placeholder="mis. jam loading dekor 06.00" value="' + esc(vb.note || "") + '"></div><div class="ff-act"><button class="btn" id="vbCancel">Batal</button><button class="btn gold" id="vbSave">Simpan</button></div>'
-        : '<div class="vb-st"><span class="tchip ' + (vb.status === "booked" ? "ok" : vb.status === "batal" ? "late" : vb.status === "proses" ? "run" : "") + '">' + VB_ST[vb.status] + '</span>' + (vb.date ? '<small>sejak ' + fmtDate(vb.date) + '</small>' : '') + '</div>' +
+        : '<div class="vb-st"><span class="tchip ' + (vb.status === "booked" ? "ok" : vb.status === "batal" ? "late" : vb.status === "proses" ? "run" : "") + '">' + VB_ST[vb.status] + '</span>' + (vb.pribadi ? '<span class="tchip vb-pr">Venue pribadi</span>' : '') + (vb.date ? '<small>sejak ' + fmtDate(vb.date) + '</small>' : '') + '</div>' +
+          (vb.pribadi ? rowKV("Pembayaran venue", "Client bayar langsung ke venue") + rowKV("Konfirmasi client", vb.clientPaid ? '<span class="tchip ok">Sudah bayar' + (vb.clientPaidDate ? " · " + fmtDate(vb.clientPaidDate) : "") + '</span>' : '<span class="tchip run">Menunggu kabar client</span>') : '') +
           (vb.pic || vb.phone ? rowKV("PIC", esc(vb.pic || "-") + (vb.phone ? " · " + waChip(vb.phone) : "")) : '') + (+vb.cost ? rowKV("Total biaya venue", rp(vb.cost)) : '') + (+vb.dp ? rowKV("DP venue", rp(vb.dp)) : '') +
-          ((vb.status === "booked" || vb.status === "proses") && x.date ? rowKV("Pelunasan venue", vb.lunas ? '<span class="tchip ok">Lunas' + (vb.lunasDate ? " · " + fmtDate(vb.lunasDate) : "") + '</span>' : (+vb.cost ? "Sisa " + rp(Math.max(0, vb.cost - (vb.dp || 0))) + " · " : "") + "jatuh tempo " + fmtDate(addMonths(x.date, -1))) : '') + (vb.note ? rowKV("Catatan", esc(vb.note)) : '') +
+          (!vb.pribadi && (vb.status === "booked" || vb.status === "proses") && x.date ? rowKV("Pelunasan venue", vb.lunas ? '<span class="tchip ok">Lunas' + (vb.lunasDate ? " · " + fmtDate(vb.lunasDate) : "") + '</span>' : (+vb.cost ? "Sisa " + rp(Math.max(0, vb.cost - (vb.dp || 0))) + " · " : "") + "jatuh tempo " + fmtDate(addMonths(x.date, -1))) : '') + (vb.note ? rowKV("Catatan", esc(vb.note)) : '') +
           '<button class="btn small" id="vbOpen">' + svgI('<path d="M4 20h4L19 9l-4-4L4 16z"/>') + (vb.status === "belum" ? "Catat booking venue" : "Ubah") + '</button>') + '</section>';
-    const kH = '<section class="card tx-card"><h4>Data kontrak ' + admTag("a3") + '</h4>' + (x.contractDone ? '' : '<p class="tx-hint">Isi add-ons, skema DP / full payment, deadline pelunasan, dan rincian layanan.</p>') +
+    const kH = '<section class="card tx-card"><h4>Data kontrak ' + admTag("a3") + '</h4>' + (x.contractDone ? '' : '<p class="tx-hint">Isi skema DP / full payment, deadline pelunasan, dan rincian layanan.</p>') +
       rowKV("Skema", x.scheme === "full" ? "Full payment" : "DP " + rp(x.dp || 0)) + (x.scheme === "dp" ? rowKV("Batas maks. pelunasan", fmtDate(x.payDeadline || defDeadline(x))) : '') + rowKV("Status", x.contractDone ? '<span class="tchip ok">Lengkap</span>' : '<span class="tchip run">Perlu dilengkapi</span>') +
       '<div class="inv-act"><button class="btn small' + (x.contractDone ? "" : " gold") + '" data-go="trx-kontrak-' + x.id + '">' + svgI('<path d="M4 20h4L19 9l-4-4L4 16z"/>') + (x.contractDone ? "Ubah data kontrak" : "Lengkapi data kontrak") + '</button><button class="btn small" id="kPdf2">' + svgI('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>') + 'Kontrak PDF</button></div></section>';
-    const vbLock = noVenue(x) ? '<section class="card tx-card vb-card nc-freeze" aria-disabled="true"><h4>Booking venue ' + admTag("a3") + '</h4><div class="nc-lock">' + svgI('<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>') + '<b>Booking & pelunasan venue terkunci</b><span>' + (x.tbc ? 'Paket client masih <b>TBC (To Be Confirmed)</b>. Booking venue terbuka otomatis setelah Admin 1 memilih paket di Edit data client.</span></div></section>' : '') + (x.tbc ? '' : (x.custom ? "Paket custom" : "Paket rumahan") + ' tidak membutuhkan booking venue' + (x.venue ? ' (lokasi: ' + esc(x.venue) + ')' : '') + '.</span></div></section>') : vbH;
+    const vbLock = noVenue(x) ? '<section class="card tx-card vb-card nc-freeze" aria-disabled="true"><h4>Booking venue ' + admTag("a3") + '</h4><div class="nc-lock">' + svgI('<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>') + '<b>Booking & pelunasan venue terkunci</b><span>' + (x.tbc ? 'Paket client masih <b>TBC (To Be Confirmed)</b>. Booking venue terbuka otomatis setelah Admin 1 memilih paket di Edit data client.</span></div></section>' : '') + (x.tbc ? '' : (x.custom ? "Paket custom" : /rias/i.test((x.templateId || "") + (x.packageName || "")) ? "Paket Rias Busana" : "Paket rumahan") + ' tidak membutuhkan booking venue' + (x.venue ? ' (lokasi: ' + esc(x.venue) + ')' : '') + '.</span></div></section>') : vbH;
     h += '<div class="tx-detail"><div class="tx-col">' + ctaH + invH + schH + payH + '</div><div class="tx-col">' + kH + vbLock + '</div></div>';
     $("tabBody").innerHTML = h; bindSteps();
     const T = $("tabBody");
@@ -6991,13 +6990,17 @@
     if ($("vbOpen")) $("vbOpen").addEventListener("click", () => { vbEdit = true; renderTrxDetail(x.id, "finance"); setTimeout(() => $("tabBody").querySelector(".vb-card").scrollIntoView({ block: "center", behavior: "smooth" }), 30); });
     if ($("vbSave")) {
       let vs = vb.status, vd = vb.date || "";
-      $("vbSt").addEventListener("click", e => { const b = e.target.closest("[data-v]"); if (!b) return; vs = b.dataset.v; $("vbSt").querySelectorAll("[data-v]").forEach(q => q.classList.toggle("on", q === b)); if (vs === "booked" && !vd) { vd = todayIso(); $("vbDate").value = fmtDateLong(vd); } });
-      mountDp("vbDate", () => vd, iso => { vd = iso; });
+      $("vbSt").addEventListener("click", e => { const b = e.target.closest("[data-v]"); if (!b) return; vs = b.dataset.v; $("vbSt").querySelectorAll("[data-v]").forEach(q => q.classList.toggle("on", q === b)); if (vs === "booked" && !vd) { vd = todayIso(); $("vbDate").value = fmtDateLong(vd); if ($("vbDate2")) $("vbDate2").value = fmtDateLong(vd); } });
+      mountDp("vbDate", () => vd, iso => { vd = iso; if ($("vbDate2")) $("vbDate2").value = iso ? fmtDateLong(iso) : ""; });
+      mountDp("vbDate2", () => vd, iso => { vd = iso; $("vbDate").value = iso ? fmtDateLong(iso) : ""; });
+      let vm = vb.pribadi ? "pribadi" : "wo";
+      $("vbMode").addEventListener("click", e => { const b = e.target.closest("[data-m]"); if (!b) return; vm = b.dataset.m; $("vbMode").querySelectorAll("[data-m]").forEach(q => q.classList.toggle("on", q === b)); T.querySelector(".vb-prib").hidden = vm !== "pribadi"; T.querySelector(".vb-wo").hidden = vm === "pribadi"; });
       bindRp($("vbCost"), () => {}); bindRp($("vbDp"), () => {});
       $("vbCancel").addEventListener("click", () => { vbEdit = false; renderTrxDetail(x.id, "finance"); });
       $("vbSave").addEventListener("click", async () => {
         const lun = $("vbLunas").checked;
-        x.venueBooking = { status: vs, date: vd, cost: parse($("vbCost").value), dp: parse($("vbDp").value), lunas: lun, lunasDate: lun ? (vb.lunasDate || todayIso()) : "", pic: $("vbPic").value.trim(), phone: $("vbPhone").value.trim(), note: $("vbNote").value.trim(), venue: x.venue, by: meName(), at: new Date().toISOString() };
+        const prib = vm === "pribadi", cp = prib && $("vbClientPaid").checked;
+        x.venueBooking = { status: vs, date: vd, pribadi: prib, clientPaid: cp, clientPaidDate: cp ? (vb.clientPaidDate || todayIso()) : "", cost: prib ? 0 : parse($("vbCost").value), dp: prib ? 0 : parse($("vbDp").value), lunas: prib ? cp : lun, lunasDate: prib ? (cp ? (vb.clientPaidDate || todayIso()) : "") : lun ? (vb.lunasDate || todayIso()) : "", pic: $("vbPic").value.trim(), phone: $("vbPhone").value.trim(), note: $("vbNote").value.trim(), venue: x.venue, by: meName(), at: new Date().toISOString() };
         vbEdit = false; await putTrx(x); toast("Booking venue disimpan ✓"); renderTrxDetail(x.id, "finance"); });
     }
   }
@@ -7135,7 +7138,7 @@
   // ================= LEMBAR VALIDASI HARI-H (rekap lengkap per client) =================
   function hhData(x0){
     const x = normContract(clone(x0)), s = trxState(x), st = stageInfo(x), t0 = todayIso(), P = (x.payments || []).filter(p => (+p.amount || 0) > 0);
-    const PT = { dp: "DP", full: "Full payment", lanjutan: "Lanjutan", pelunasan: "Pelunasan" }, VS = { booked: "Booked", proses: "Proses / nego", belum: "Belum dihubungi" };
+    const PT = { dp: "DP", full: "Full payment", lanjutan: "Lanjutan", pelunasan: "Pelunasan" }, VS = { booked: "Booked", proses: "Segera booking", belum: "Sedang pilih" };
     const d = v => v ? fmtDateLong(v).split(", ")[1] : "-", jam = o => o && o.start ? o.start + (o.end ? "–" + o.end : "") + " WIB" : "-";
     const vb = x.venueBooking || {}, inv = x.invoice, cat = inv && inv.catering, ci = cat ? (cat.items || []).filter(c => (c.name || "").trim()) : [];
     const ven = (x.vendors || []).filter(v => (v.cat || v.name)), fit = (x.fittings || []).filter(f => f.status !== "batal");
@@ -7158,7 +7161,8 @@
     S.push({ id: "jadwal", t: "Jadwal Pembayaran", cols: [["Termin", 30], ["Jatuh tempo", 26], ["Jumlah", 22, "r"], ["Status", 22, "r"]],
       rows: s.sch.filter(z => z.amount > 0).map(z => [z.label, d(z.due), rp(z.amount), z.cover >= z.amount ? "Lunas" : z.status === "late" ? "Telat" : z.cover > 0 ? "Sebagian" : "Belum dibayar"]), empty: "-" });
     S.push({ id: "venue", t: "Booking Venue", kv: [["Venue", x.venue || "-"], ["Status booking", VB_ST[vb.status || "belum"] || "-"], ["Tanggal booking", d(vb.date)],
-      ["Biaya venue", (+vb.cost || pkgVenueCost(x)) ? rp(+vb.cost || pkgVenueCost(x)) : "-"], ["DP venue", vb.dp ? rp(vb.dp) : "-"], ["Pelunasan venue", vb.lunas ? "Lunas" : (vb.status === "booked" ? "Belum lunas (maks. H-1 bulan)" : "-")], ["PIC venue", vb.pic || "-"]] });
+      ...(vb.pribadi ? [["Pembayaran venue", "Venue pribadi · client bayar langsung ke venue"], ["Konfirmasi client", vb.clientPaid ? "Sudah bayar" + (vb.clientPaidDate ? " (" + d(vb.clientPaidDate) + ")" : "") : "Menunggu kabar client"]]
+        : [["Biaya venue", (+vb.cost || pkgVenueCost(x)) ? rp(+vb.cost || pkgVenueCost(x)) : "-"], ["DP venue", vb.dp ? rp(vb.dp) : "-"], ["Pelunasan venue", vb.lunas ? "Lunas" : (vb.status === "booked" ? "Belum lunas (maks. H-1 bulan)" : "-")]]), ["PIC venue", vb.pic || "-"]] });
     S.push({ id: "vendor", t: "Booking Vendor (" + st.booked + "/" + st.act + " booked)", cols: [["No", 6, "c"], ["Kategori", 18], ["Vendor", 22], ["Kontak", 16], ["Status", 14], ["Tgl booking", 14], ["Catatan", 10]],
       rows: ven.map((v, i) => [String(i + 1), properCase(v.cat || "-"), v.name ? properCase(v.name) : "-", v.contact || "-", VS[v.status] || v.status || "-", d(v.date), v.note || ""]),
       flag: ven.map(v => v.status === "booked" ? "ok" : "bad"), empty: "Daftar vendor belum dibuat." });
