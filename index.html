@@ -2331,6 +2331,16 @@
   .thp-sw2 i:nth-child(1){background:var(--a);flex:1.6}.thp-sw2 i:nth-child(2){background:var(--b)}.thp-sw2 i:nth-child(3){background:var(--c)}.thp-sw2 i:nth-child(4){background:var(--d)}
   .thp .thp-nm{font-size:12.5px;padding:0 2px}
   .thp .thp-it.on .thp-nm::after{content:" ✓";color:var(--gold)}
+  .tbc-box{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--gold) 9%,var(--panel));border:1px dashed color-mix(in srgb,var(--gold) 55%,transparent)}
+  .tbc-box svg{width:20px;height:20px;flex:none;margin-top:2px;fill:none;stroke:var(--gold);stroke-width:1.8}
+  .tbc-box b{display:block;font-size:13.5px;color:var(--hi)} .tbc-box span{display:block;font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:2px} .tbc-box span b{display:inline;font-size:inherit}
+  .tbc-note{grid-column:1/-1}
+  .tbc-chip{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:999px;font:700 10.5px var(--ui);letter-spacing:.06em;color:var(--gold);border:1px dashed var(--gold);background:color-mix(in srgb,var(--gold) 8%,transparent);vertical-align:middle}
+  .vb-card.nc-freeze{min-height:190px}
+  .vb-card.nc-freeze > h4{padding:20px 22px 0;opacity:.45}
+  .vb-card.nc-freeze .nc-lock{padding:56px 28px 24px}
+  .vb-card.nc-freeze .nc-lock svg{width:24px;height:24px;fill:none;stroke:var(--gold);stroke-width:1.8}
+  .vb-card.nc-freeze .nc-lock span{max-width:420px;font-size:13px;color:var(--muted);line-height:1.5}
 </style>
 </head>
 <body data-view="login">
@@ -3295,7 +3305,7 @@
   const NAME_KEY = /(^|\.)(name|father|mother|pob)$/;
   // format proper untuk teks bebas (paket, venue, alamat, add-on, item invoice, vendor)
   const TX_LOW = new Set(["dan", "di", "ke", "dari", "yang", "untuk", "dengan", "atau", "per", "&", "and", "of", "the", "x"]);
-  const TX_ACR = new Set(["GOR","KUA","TNI","POLRI","PT","CV","RT","RW","BSD","MUA","TM","DP","BCA","BRI","BNI","BTN","BSI","PLN","RS","RSUD","SMA","SMK","SMP","SD","UI","ITB","IPB","UIN","LED","VIP","VVIP","MC","AC","HT","DKI","PKK","KUD","BPJS","II","III","IV","VI","VII","VIII","IX","XI","XII","CPP","CPW","STTD","KM","SPBU","KFC","BUMN","UMKM","GSG","ATM","WO","IG"]);
+  const TX_ACR = new Set(["GOR","KUA","TNI","POLRI","PT","CV","RT","RW","BSD","MUA","TM","DP","BCA","BRI","BNI","BTN","BSI","PLN","RS","RSUD","SMA","SMK","SMP","SD","UI","ITB","IPB","UIN","LED","VIP","VVIP","MC","AC","HT","DKI","PKK","KUD","BPJS","II","III","IV","VI","VII","VIII","IX","XI","XII","CPP","CPW","TBC","STTD","KM","SPBU","KFC","BUMN","UMKM","GSG","ATM","WO","IG"]);
   const TX_UNIT = new Set(["m", "cm", "mm", "kg", "gr", "pcs", "lt", "m2", "m²"]);
   function textCase(str){ const s = String(str == null ? "" : str).replace(/[ \t]+/g, " ").trim(); if (!s) return s;
     const pm = s.match(/^add[\s-]*on\s*:\s*/i); if (pm) return "Add-on: " + textCase(s.slice(pm[0].length));
@@ -4221,6 +4231,7 @@
     if (!cats.length) ["Rias & busana", "Dekorasi", "Dokumentasi", "Hiburan", "MC", "Catering"].forEach(c => cats.push(c));
     const dot = st => st === "booked" ? '<i class="bdot ok" title="Sudah booked"></i>' : '';
     const venCell = (x, plain) => { plain = plain || noVenue(x); const vb = (x.venueBooking || {}).status || "belum", nm = esc(properCase(x.venue || "-"));
+      if (x.tbc) return '<td class="rc-ven"><span class="tbc-chip" title="Paket belum dipilih · venue terkunci">🔒 TBC</span></td>';
       return plain ? '<td class="rc-ven"><span class="vn">' + nm + '</span></td>' : '<td class="rc-ven"><span class="vd ' + vb + '">' + dot(vb) + '<span class="vn">' + nm + '</span></span></td>'; };
     const paxCell = x => { const tp = trxPax(x), ap = trxAddPax(x); return '<td class="r rc-pax"' + (ap ? ' title="' + x.pax + ' pax paket + ' + ap + ' pax buffet catering"' : '') + '>' + (tp || "-") + (ap ? '<small>+' + ap + ' buffet</small>' : '') + '</td>'; };
     const base = (x, plain) => (rcSel ? '<td class="rc-n rc-ck"><input type="checkbox" tabindex="-1"' + (rcSel.has(x.id) ? " checked" : "") + ' aria-label="Pilih client"></td>' : '<td class="rc-n"></td>') + '<td class="rc-c1"><b>' + esc(properCase(x.cpp && x.cpp.name || "-")) + '</b></td><td class="rc-c2"><b>' + esc(properCase(x.cpw && x.cpw.name || "-")) + '</b></td><td class="rc-d">' + fmtDMY(x.date) + '</td><td class="rc-pk">' + esc(trxPkgLabel(x)) + '</td>' + venCell(x, plain) + paxCell(x);
@@ -5146,9 +5157,9 @@
     saveFile(buildContractPdf(x, n), safeName("Kontrak " + contractNo(x, n) + " - " + (x.client || "")) + ".pdf", "application/pdf");
   }
   // paket rumahan & paket custom tidak membutuhkan booking / pelunasan venue
-  function noVenue(x){ if (!x) return false; if (x.custom) return true; const t = x.templateId && state.templates[x.templateId]; return /rumahan/i.test((x.templateId || "") + " " + (x.packageName || "") + " " + (t ? t.name || "" : "")); }
+  function noVenue(x){ if (!x) return false; if (x.custom || x.tbc) return true; const t = x.templateId && state.templates[x.templateId]; return /rumahan/i.test((x.templateId || "") + " " + (x.packageName || "") + " " + (t ? t.name || "" : "")); }
   function isNoCat(x){ const t = x && x.templateId && state.templates[x.templateId]; return !!((t && t.noCatering) || (x && x.noCatering)); }
-  function trxPkgLabel(x){ const t = x.templateId && state.templates[x.templateId]; return x.packageName || (t ? t.name : "-"); }
+  function trxPkgLabel(x){ if (x && x.tbc) return "TBC · To Be Confirmed"; const t = x.templateId && state.templates[x.templateId]; return x.packageName || (t ? t.name : "-"); }
 
   // ================= HALAMAN TRANSAKSI =================
   let trxFilter = "all", trxQ = "", fm = null, fmProof = null, payProof = null;
@@ -5300,7 +5311,7 @@
       '<p>' + (ex ? "Perubahan langsung terlihat oleh Admin 2 dan Admin 3." : "Isi saat client deal. Setelah disimpan, data otomatis diteruskan ke Admin 2 (fitting & vendor) dan Admin 3 (finance, invoice & booking venue).") + '</p></div></section>' +
       '<div class="tx-form"><div class="tx-col">' +
       '<section class="card tx-sec"><h4><i>1</i>Paket</h4>' +
-        '<div class="field"><label for="fPkg">Paket yang diambil *</label><select id="fPkg" class="inp"><option value="">— Pilih paket —</option><option value="__custom"' + (fm.custom ? " selected" : "") + '>✎ Paket custom (isi sendiri)</option>' +
+        '<div class="field"><label for="fPkg">Paket yang diambil *</label><select id="fPkg" class="inp"><option value="">— Pilih paket —</option><option value="__tbc"' + (fm.tbc ? " selected" : "") + '>⏳ TBC · To Be Confirmed (paket belum dipilih)</option><option value="__custom"' + (fm.custom ? " selected" : "") + '>✎ Paket custom (isi sendiri)</option>' +
         [["", "Paket gedung · all in"], ["Rumahan", "Paket rumahan"], ["Non Catering", "Paket non catering"]].map(g => { const L = tpls.filter(t => (t.group || "") === g[0]); return L.length ? '<optgroup label="' + g[1] + '">' + L.map(t => '<option value="' + t.id + '"' + (t.id === fm.templateId ? " selected" : "") + '>' + esc(t.name || "Paket tanpa nama") + (t.noCatering && t.group !== "Non Catering" ? " · Non Catering" : "") + '</option>').join("") + '</optgroup>' : ""; }).join("") + '</select></div>' +
         '<div class="g3" id="fPkgInfo"></div></section>' +
       '<section class="card tx-sec"><h4><i>2</i>Calon pengantin</h4><div class="cp-grid">' + person1("cpp", "Calon Pengantin Pria", "CPP") + person1("cpw", "Calon Pengantin Wanita", "CPW") + '</div>' +
@@ -5320,8 +5331,8 @@
     $("apMain").innerHTML = h;
     bindFmInputs();
     $("fPkg").addEventListener("change", e => {
-      const t = state.templates[e.target.value]; fm.templateId = t ? t.id : ""; const wasC = fm.custom; fm.custom = e.target.value === "__custom";
-      Object.assign(fm, t ? { packageName: t.name, venue: t.event.venue || "", pax: +t.pax || 0, price: +t.price || 0 } : fm.custom && wasC ? {} : { packageName: "", venue: "", pax: 0, price: 0, noCatering: false }); fm.paxAdj = false;
+      const t = state.templates[e.target.value]; fm.templateId = t ? t.id : ""; const wasC = fm.custom, wasT = fm.tbc; fm.custom = e.target.value === "__custom"; fm.tbc = e.target.value === "__tbc";
+      Object.assign(fm, t ? { packageName: t.name, venue: t.event.venue || "", pax: +t.pax || 0, price: +t.price || 0 } : fm.custom && wasC ? {} : fm.tbc ? (wasT ? {} : { packageName: "TBC", venue: "TBC", pax: 0, price: 0, noCatering: false }) : { packageName: "", venue: "", pax: 0, price: 0, noCatering: false }); fm.paxAdj = false;
       if (fm.custom) setTimeout(() => { const n = $("fCName"); if (n) n.focus(); }, 30);
       $("fVenue2").value = fm.venue; $("fPax2").value = fm.pax || ""; renderFormPkg(); renderFormSide();
     });
@@ -5335,6 +5346,13 @@
   function renderWaSlots(){ $("apMain").querySelectorAll("[data-wa]").forEach(sl => { const k = sl.dataset.wa, u = waUrl(fm[k].phone);
     sl.innerHTML = u ? '<a class="wa-chip" href="' + u + '" target="_blank" rel="noopener">' + WA_IC + '<span>Chat ' + k.toUpperCase() + ' di WhatsApp</span></a>' : ''; }); }
   function renderFormPkg(){
+    if (fm.tbc) { $("fPkgInfo").innerHTML = '<div class="field c-note tbc-note"><div class="tbc-box">' + svgI('<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>') + '<div><b>Paket TBC · To Be Confirmed</b><span>Client belum memilih paket. <b>Venue terkunci</b> (booking &amp; pelunasan venue tidak bisa diproses) sampai paket dipilih lewat Edit data client. Data client, jadwal, pembayaran DP/booking fee, dan invoice tetap bisa diproses.</span></div></div></div>' +
+        '<div class="field"><label>Venue</label><input class="inp locked" readonly tabindex="-1" value="TBC · terkunci"></div>' +
+        '<div class="field"><label for="fPax">Estimasi pax <small>(opsional)</small></label><input class="inp" id="fPax" inputmode="numeric" placeholder="Jika sudah ada" value="' + (fm.pax || "") + '"></div>' +
+        '<div class="field"><label for="fPrice">Estimasi nilai / booking fee <small>(opsional)</small></label>' + moneyInp("fPrice", fm.price, "Jika sudah ada") + '</div>';
+      $("fPax").addEventListener("input", e => { const v = parse(e.target.value); e.target.value = v || ""; fm.pax = v; if ($("fPax2")) $("fPax2").value = v || ""; renderFormSide(); });
+      bindRp($("fPrice"), v => { fm.price = v; renderFormSide(); });
+      return; }
     if (fm.custom) { $("fPkgInfo").innerHTML = '<div class="field"><label for="fCName">Nama paket *</label><input class="inp" id="fCName" placeholder="mis. Paket Akad Intimate 100 pax" value="' + esc(fm.packageName || "") + '"></div>' +
         '<div class="field"><label for="fVenueIn">Venue / lokasi acara *</label><input class="inp" id="fVenueIn" placeholder="mis. Rumah CPW / Gedung ..." value="' + esc(fm.venue || "") + '"></div>' +
         '<div class="field"><label for="fPax">Pax</label><input class="inp" id="fPax" inputmode="numeric" placeholder="Jumlah tamu" value="' + (fm.pax || "") + '"></div>' +
@@ -5403,7 +5421,7 @@
   async function saveTrxForm(){
     const need = (id, msg) => { toast(msg); const el = $(id); if (el) { el.focus(); el.scrollIntoView({ block: "center", behavior: "smooth" }); } return false; };
     ["cpp", "cpw"].forEach(k => Object.keys(fm[k]).forEach(f => fm[k][f] = String(fm[k][f] || "").trim())); fixNames(fm);
-    if (!fm.templateId && !fm.custom) return need("fPkg", "Pilih paket yang diambil");
+    if (!fm.templateId && !fm.custom && !fm.tbc) return need("fPkg", "Pilih paket yang diambil (atau TBC jika client belum menentukan)");
     if (fm.custom) { fm.packageName = (fm.packageName || "").trim(); if (!fm.packageName) return need("fCName", "Isi nama paket custom"); if (!(fm.venue || "").trim()) return need("fVenueIn", "Isi venue / lokasi acara"); if (!(+fm.price > 0)) return need("fPrice", "Isi nilai paket"); }
     { const tt = state.templates[fm.templateId]; if (tt && tt.venueOpen && !(fm.venue || "").trim()) return need("fVenueIn", "Isi lokasi acara (alamat rumah / nama tempat)"); }
     if (!fm.cpp.name) return need("f_cpp_name", "Isi nama lengkap CPP");
@@ -5418,8 +5436,10 @@
       try { await putProof(pr); oldIds.forEach(o => { delete data.proofs[o]; if (db) db.collection("proofs").doc(o).delete().catch(() => {}); }); ktp = { [k]: pr.id }; } catch (err) { toast(err.message); } }
     const base = { cpp: Object.assign({}, ex ? ex.cpp : {}, { name: fm.cpp.name, phone: fm.cpp.phone }), cpw: Object.assign({}, ex ? ex.cpw : {}, { name: fm.cpw.name, phone: fm.cpw.phone }),
       ktp, address: (fm.address || "").trim(), addressOf: fm.addressOf, signOf: fm.signOf || fm.addressOf, signer: { pob: (fm.signer.pob || "").trim(), dob: (fm.signer.dob || "").trim(), job: (fm.signer.job || "").trim() }, akad: { date: fm.akad.date, start: fm.akad.start || "", end: fm.akad.end || "" }, resepsi: { date: fm.resepsi.date, start: fm.resepsi.start || "", end: fm.resepsi.end || "" },
-      templateId: fm.templateId, packageName: fm.packageName, venue: fm.venue, pax: fm.pax, price: fm.price, paxAdj: !!fm.paxAdj, custom: !!fm.custom, noCatering: fm.custom ? !!fm.noCatering : !!(state.templates[fm.templateId] && state.templates[fm.templateId].noCatering), addons };
-    if (fm.custom) base.templateId = "";
+      templateId: fm.templateId, packageName: fm.packageName, venue: fm.venue, pax: fm.pax, price: fm.price, paxAdj: !!fm.paxAdj, custom: !!fm.custom, tbc: !!fm.tbc, noCatering: fm.custom ? !!fm.noCatering : !!(state.templates[fm.templateId] && state.templates[fm.templateId].noCatering), addons };
+    if (fm.custom || fm.tbc) base.templateId = "";
+    if (fm.tbc) { base.packageName = "TBC"; base.venue = "TBC"; }
+    if (ex && ex.tbc && !fm.tbc) { base.tbcResolvedAt = new Date().toISOString(); if (ex.venueBooking && ex.venueBooking.venue === "TBC") base.venueBooking = { status: "belum" }; }
     base.date = evDateOf(base); base.client = coupleName(base); base.phone = primaryPhone(base);
     if (ex) { Object.assign(ex, base); if (ex.scheme === "dp" && ex.payDeadline && !ex.dlManual) ex.payDeadline = defDeadline(ex); await putTrx(ex); fm = null; toast("Data client diperbarui ✓"); go("trx-" + ex.id + "/client"); return; }
     const x = Object.assign({ id, no: nextContractBase(todayIso()), status: "deal", payments: [], reminders: {}, scheme: "dp", dp: 0, payDeadline: "", services: SERVICES_TPL, clientNote: "", email: "",
@@ -5581,7 +5601,7 @@
     const v = (x.vendors || []).filter(a => a.status !== "batal"), booked = v.filter(a => a.status === "booked").length, t0 = todayIso();
     const fits = (x.fittings || []).filter(f => f.status === "terjadwal"), nextFit = fits.filter(f => f.date >= t0).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0] || null;
     const inv = !!(x.invoice && (x.invoice.items || []).length), s = trxState(x), vb = (x.venueBooking || {}).status || "belum";
-    return { booked, act: v.length, nextFit, a2done: v.length > 0 && booked === v.length, inv, paidN: s.n, vb, a3done: inv && s.n > 0 && (vb === "booked" || noVenue(x)) && !!x.contractDone,
+    return { booked, act: v.length, nextFit, a2done: v.length > 0 && booked === v.length, inv, paidN: s.n, vb, a3done: inv && s.n > 0 && (vb === "booked" || (noVenue(x) && !x.tbc)) && !!x.contractDone,
       new2: !(x.seen && x.seen.a2), new3: !(x.seen && x.seen.a3), s };
   }
   const invSig = x => (+x.price || 0) + "|" + (x.pax || 0) + "|" + (x.addons || []).map(a => a.name + ":" + a.price + ":" + addQ(a).qty).join(",");
@@ -5678,7 +5698,8 @@
       { t: "Input DP / full payment", d: st.paidN ? "Sudah " + (st.paidN + OF(x)) + "x bayar · " + rp(st.s.paid) : "Nominal, bank & bukti transfer", done: st.paidN > 0, go: "trx-bayar-" + id },
       { t: "Isi data kontrak & add-ons", d: x.contractDone ? (x.scheme === "full" ? "Full payment" : "DP " + rp(x.dp || 0)) + ((x.addons || []).length ? " · " + x.addons.length + " add-on" : "") : "Add-ons, skema pembayaran, batas pelunasan", done: !!x.contractDone, go: "trx-kontrak-" + id },
       { t: "Buat invoice", d: st.inv ? x.invoice.no + " · " + rp(trxTotal(x)) : "Otomatis dari paket & add-ons, bisa diedit", done: st.inv, go: "trx-invoice-" + id },
-      noVenue(x) ? { t: "Booking & pelunasan venue", d: "Terkunci · " + (x.custom ? "paket custom" : "paket rumahan") + " tidak memakai venue", done: true, lock: true }
+      x.tbc ? { t: "Booking & pelunasan venue", d: "Terkunci · paket masih TBC, terbuka otomatis setelah client memilih paket", done: false, lock: true }
+        : noVenue(x) ? { t: "Booking & pelunasan venue", d: "Terkunci · " + (x.custom ? "paket custom" : "paket rumahan") + " tidak memakai venue", done: true, lock: true }
         : { t: "Booking & pelunasan venue", d: (x.venue || "-") + " · " + VB_ST[st.vb].toLowerCase() + (st.vb === "booked" ? ((x.venueBooking || {}).lunas ? " · lunas" : " · lunas H-1 bln") : ""), done: st.vb === "booked" && (!venueDue(x)), act: "venue" }];
     const done = S.filter(z => z.done).length, nextI = S.findIndex(z => !z.done);
     return '<section class="card steps-card ' + k + '"><div class="sc-h"><span>' + admTag(k) + '<b>' + (done === S.length ? "Semua langkah selesai" : "Langkah yang perlu dikerjakan") + '</b></span><em>' + done + ' / ' + S.length + ' selesai</em></div>' +
@@ -5719,7 +5740,7 @@
       '<div class="wa-row">' + waChip(x[k].phone, k.toUpperCase()) + '</div><div class="ktp-row">' + ktpBtn(k) + '</div></div>';
     let h = '<div class="tx-detail"><div class="tx-col"><section class="card tx-card"><h4>Calon pengantin ' + admTag("a1") + '<button class="btn small" data-go="trx-edit-' + x.id + '">' + svgI('<path d="M4 20h4L19 9l-4-4L4 16z"/>') + 'Edit</button></h4><div class="cp-grid">' + person("cpp", "Calon Pengantin Pria") + person("cpw", "Calon Pengantin Wanita") + '</div>' +
       rowKV("Alamat (" + (x.addressOf === "cpp" ? "CPP" : "CPW") + ")", esc(x.address || "-")) + (x.ktp && (x.ktp.cpp || x.ktp.cpw) ? '' : rowKV("KTP", '<span class="tchip late">Belum di-upload</span>')) + '</section></div>' +
-      '<div class="tx-col"><section class="card tx-card"><h4>Paket &amp; acara</h4>' + rowKV("Paket", esc(trxPkgLabel(x))) + rowKV("Venue", esc(x.venue || "-")) + rowKV("Pax", trxPax(x) ? trxPax(x) + " pax" + (trxAddPax(x) ? " · " + x.pax + " paket + " + trxAddPax(x) + " buffet catering" : "") : "-") +
+      '<div class="tx-col">' + (x.tbc ? '<section class="card tx-card"><div class="tbc-box">' + svgI('<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>') + '<div><b>Paket masih TBC (To Be Confirmed)</b><span>Booking &amp; pelunasan venue terkunci sampai client memilih paket. Pilih paket lewat <b>Edit data client</b> — venue, pax, dan nilai paket terisi otomatis dan invoice ditandai untuk diperbarui.</span></div></div></section>' : '') + '<section class="card tx-card"><h4>Paket &amp; acara</h4>' + rowKV("Paket", x.tbc ? '<span class="tbc-chip">TBC</span> To Be Confirmed' : esc(trxPkgLabel(x))) + rowKV("Venue", x.tbc ? '<span class="tbc-chip">🔒 TBC</span> terkunci sampai paket dipilih' : esc(x.venue || "-")) + rowKV("Pax", trxPax(x) ? trxPax(x) + " pax" + (trxAddPax(x) ? " · " + x.pax + " paket + " + trxAddPax(x) + " buffet catering" : "") : "-") +
       rowKV("Akad", x.akad.date ? fmtDate(x.akad.date) + (x.akad.start ? " · " + timeRange(x.akad) : "") : "-") + rowKV("Resepsi", x.resepsi.date ? fmtDate(x.resepsi.date) + (x.resepsi.start ? " · " + timeRange(x.resepsi) : "") : "-") +
       rowKV("Nilai paket", rp(+x.price || 0)) + '<h5>Add-ons ' + admTag("a3") + '</h5>' + ((x.addons || []).length ? x.addons.map(a => rowKV(esc(a.name), rp(a.price))).join("") : '<p class="tx-hint">Belum ada add-on (diinput Admin 3 di Data kontrak).</p>') +
       rowKV("<b>Nilai transaksi</b>", rp((+x.price || 0) + trxAddTotal(x))) + (x.invoice && (x.invoice.items || []).length && invTotal(x.invoice) !== (+x.price || 0) + trxAddTotal(x) ? '<p class="tx-hint">Nilai di invoice Admin 3: <b>' + rp(invTotal(x.invoice)) + '</b> (sudah disesuaikan).</p>' : '') + '</section></div></div>';
@@ -6918,7 +6939,7 @@
     const kH = '<section class="card tx-card"><h4>Data kontrak ' + admTag("a3") + '</h4>' + (x.contractDone ? '' : '<p class="tx-hint">Isi add-ons, skema DP / full payment, deadline pelunasan, dan rincian layanan.</p>') +
       rowKV("Skema", x.scheme === "full" ? "Full payment" : "DP " + rp(x.dp || 0)) + (x.scheme === "dp" ? rowKV("Batas maks. pelunasan", fmtDate(x.payDeadline || defDeadline(x))) : '') + rowKV("Status", x.contractDone ? '<span class="tchip ok">Lengkap</span>' : '<span class="tchip run">Perlu dilengkapi</span>') +
       '<div class="inv-act"><button class="btn small' + (x.contractDone ? "" : " gold") + '" data-go="trx-kontrak-' + x.id + '">' + svgI('<path d="M4 20h4L19 9l-4-4L4 16z"/>') + (x.contractDone ? "Ubah data kontrak" : "Lengkapi data kontrak") + '</button><button class="btn small" id="kPdf2">' + svgI('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>') + 'Kontrak PDF</button></div></section>';
-    const vbLock = noVenue(x) ? '<section class="card tx-card vb-card nc-freeze" aria-disabled="true"><h4>Booking venue ' + admTag("a3") + '</h4><div class="nc-lock">' + svgI('<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>') + '<b>Booking & pelunasan venue terkunci</b><span>' + (x.custom ? "Paket custom" : "Paket rumahan") + ' tidak membutuhkan booking venue' + (x.venue ? ' (lokasi: ' + esc(x.venue) + ')' : '') + '.</span></div></section>' : vbH;
+    const vbLock = noVenue(x) ? '<section class="card tx-card vb-card nc-freeze" aria-disabled="true"><h4>Booking venue ' + admTag("a3") + '</h4><div class="nc-lock">' + svgI('<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>') + '<b>Booking & pelunasan venue terkunci</b><span>' + (x.tbc ? 'Paket client masih <b>TBC (To Be Confirmed)</b>. Booking venue terbuka otomatis setelah Admin 1 memilih paket di Edit data client.</span></div></section>' : '') + (x.tbc ? '' : (x.custom ? "Paket custom" : "Paket rumahan") + ' tidak membutuhkan booking venue' + (x.venue ? ' (lokasi: ' + esc(x.venue) + ')' : '') + '.</span></div></section>') : vbH;
     h += '<div class="tx-detail"><div class="tx-col">' + ctaH + invH + schH + payH + '</div><div class="tx-col">' + kH + vbLock + '</div></div>';
     $("tabBody").innerHTML = h; bindSteps();
     const T = $("tabBody");
