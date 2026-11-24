@@ -3577,84 +3577,78 @@
     } catch (e) { return null; }
   }
   function buildPdf(e){
-    const r = totals(e), d = Pdf(), M = 40, W = d.W, H = d.H, GOLD = "#b8912f", DARK = "#0b0b0c", MUTED = "#6e6657", LINE = "#e6dfd1";
-    const lj = logoJpeg(); if (lj) d.setImage(lj.b, lj.w, lj.h);
-    const money = v => (v < 0 ? "-Rp " : "Rp ") + fmt(Math.abs(v));
-    // header
-    d.rect(0, 0, W, 92, DARK); d.image(M, 6, 112, 80);
-    d.text("LAPORAN PROFIT EVENT", 170, 44, { size: 18, bold: true, color: "#d8b45a" });
-    d.text("Yannie Wedding Organizer", 170, 62, { size: 10, color: "#cfcac0" });
-    d.text("Dicetak " + fmtTime(new Date().toISOString()), W - M, 44, { size: 8.5, color: "#a29d92", align: "right" });
-    let y = 122;
-    const info = [["Client", e.event.client || "-"], ["Tanggal acara", fmtDate(e.event.date)], ["Paket", e.name], ["Venue", e.event.venue || "-"],
-      ["Jumlah pax", e.pax ? e.pax + " pax" : "-"], ["Terakhir disimpan", fmtTime(e.updatedAt || new Date().toISOString())]];
-    info.forEach((x, i) => { const cx = i % 2 ? W / 2 + 10 : M, cy = y + Math.floor(i / 2) * 32;
-      d.text(x[0].toUpperCase(), cx, cy, { size: 7.5, color: MUTED }); d.text(x[1], cx, cy + 13, { size: 11, bold: true, color: "#1f1b14", maxW: W / 2 - M - 14 }); });
-    y += 104;
-    // kotak ringkasan
-    const boxes = [["Harga paket", money(e.price || 0)], ["Add-ons", money(r.addPrice)], ["Total pendapatan", money(r.revenue)], ["Total biaya", money(r.cost)], ["Profit", money(r.profit)]];
-    const bw = (W - 2 * M - 4 * 6) / 5;
-    boxes.forEach((b, i) => { const x = M + i * (bw + 6), last = i === 4;
-      d.rect(x, y, bw, 50, last ? "#f3ecda" : "#f7f4ee");
-      d.text(b[0].toUpperCase(), x + 8, y + 16, { size: 7, color: MUTED });
-      d.text(b[1], x + 8, y + 34, { size: last ? 10.5 : 9.5, bold: true, color: last ? (r.profit < 0 ? "#c0392b" : "#1f8a4c") : "#1f1b14", maxW: bw - 12 });
-      if (last) d.text("margin " + pct(r.margin), x + 8, y + 45, { size: 7, color: MUTED }); });
-    y += 72;
-    const ensure = (need, header) => { if (y + need > H - 50) { d.addPage(); y = 50; if (header) header(); } };
-    const thead = (cols) => { d.rect(M, y, W - 2 * M, 20, DARK); cols.forEach(c => d.text(c[0], c[1], y + 13.5, { size: 8, bold: true, color: "#ffffff", align: c[2] })); y += 20; };
-    const COLS = [["RINCIAN BIAYA", M + 8], ["BIAYA", W - M - 8, "right"]];
-    d.text("Rincian biaya per kategori", M, y, { size: 12, bold: true, color: GOLD }); y += 10;
-    thead(COLS);
-    e.categories.forEach(c => {
-      ensure(22 + Math.min(c.items.length, 3) * 17, () => thead(COLS));
-      d.rect(M, y, W - 2 * M, 20, c.sub ? "#fbf3df" : "#f4efe3");
-      d.text((c.sub ? "Biaya ops · " : "") + c.name.toUpperCase(), M + 8, y + 13.5, { size: 8.5, bold: true, color: "#5b4a1e" });
-      d.text(money(r.catTotals[c.id]), W - M - 8, y + 13.5, { size: 8.5, bold: true, color: "#1f1b14", align: "right" }); y += 20;
-      c.items.forEach(it => { ensure(17, () => thead(COLS));
-        d.text(it.name || (it.ph ? "(nama vendor belum diisi)" : "-"), M + 18, y + 12, { size: 8.5, color: "#2b2720", maxW: W - 2 * M - 140 });
-        d.text(it.cost ? money(it.cost) : "-", W - M - 8, y + 12, { size: 8.5, color: it.cost ? "#2b2720" : "#9a9387", align: "right" });
-        y += 17; d.line(M, y, W - M, y, LINE, 0.4); });
-    });
-    if ((e.addons || []).length) {
-      y += 16; ensure(60);
-      d.text("Add-ons dari client", M, y, { size: 12, bold: true, color: GOLD }); y += 10;
-      const AC = [["ITEM", M + 8], ["HARGA KE CLIENT", W - M - 210, "right"], ["MODAL", W - M - 110, "right"], ["UNTUNG", W - M - 8, "right"]];
-      thead(AC);
-      e.addons.forEach(a => { ensure(17, () => thead(AC));
-        d.text(a.name || "-", M + 8, y + 12, { size: 8.5, maxW: W - 2 * M - 300 });
-        d.text(money(a.price || 0), W - M - 210, y + 12, { size: 8.5, align: "right" });
-        d.text(money(a.cost || 0), W - M - 110, y + 12, { size: 8.5, align: "right" });
-        d.text(money((a.price || 0) - (a.cost || 0)), W - M - 8, y + 12, { size: 8.5, align: "right" });
-        y += 17; d.line(M, y, W - M, y, LINE, 0.4); });
-    }
-    // ringkasan akhir
-    y += 18; ensure(110);
-    const sx = W / 2 + 20;
-    [["Harga paket", money(e.price || 0)], ["Add-ons (harga ke client)", money(r.addPrice)], ["Total pendapatan", money(r.revenue)], ["Total biaya", "(" + money(r.cost) + ")"]].forEach(x => {
-      d.text(x[0], sx, y + 12, { size: 9.5, color: "#2b2720" }); d.text(x[1], W - M - 8, y + 12, { size: 9.5, align: "right", color: "#2b2720" }); y += 18; });
-    d.line(sx, y + 2, W - M, y + 2, "#1f1b14", 0.8); y += 6;
-    d.rect(sx - 8, y, W - M - sx + 8, 30, "#f3ecda");
-    d.text("PROFIT PERUSAHAAN", sx, y + 19, { size: 10, bold: true, color: "#1f1b14" });
-    d.text(money(r.profit), W - M - 8, y + 19, { size: 12, bold: true, align: "right", color: r.profit < 0 ? "#c0392b" : "#1f8a4c" }); y += 36;
-    d.text("Margin " + pct(r.margin), W - M - 8, y + 4, { size: 8.5, align: "right", color: MUTED }); y += 14;
-    // riwayat simpan
-    const hs = (e.history || []).slice().reverse();
-    if (hs.length) {
-      y += 14; ensure(60);
-      d.text("Riwayat penyimpanan", M, y, { size: 12, bold: true, color: GOLD }); y += 10;
-      const HC = [["WAKTU", M + 8], ["CATATAN", M + 150], ["PENDAPATAN", W - M - 210, "right"], ["BIAYA", W - M - 110, "right"], ["PROFIT", W - M - 8, "right"]];
-      thead(HC);
-      hs.slice(0, 15).forEach(x => { ensure(17, () => thead(HC));
-        d.text(fmtTime(x.at), M + 8, y + 12, { size: 8 }); d.text(x.note || "", M + 150, y + 12, { size: 8 });
-        d.text(money(x.revenue), W - M - 210, y + 12, { size: 8, align: "right" }); d.text(money(x.cost), W - M - 110, y + 12, { size: 8, align: "right" });
-        d.text(money(x.profit), W - M - 8, y + 12, { size: 8, bold: true, align: "right" }); y += 17; d.line(M, y, W - M, y, LINE, 0.4); });
-    }
-    // footer
+    const r = totals(e), d = Pdf({ serif: true }), W = d.W, H = d.H, ML = 56, MR = 52, CW = W - ML - MR, TOP = 58, BOT = 74;
+    const INK = "#111111", BODY = "#1c1c1c", MUTED = "#6b6458", GOLD = "#a8822e", RL = "#d9d3c6", GREEN = "#1f6b3e", RED = "#9b2c22";
+    const lj = logoJpeg(true); if (lj) d.setImage(lj.b, lj.w, lj.h);
+    const SM = 8.8, LH = 13, money = v => (v < 0 ? "- Rp " : "Rp ") + fmt(Math.abs(Math.round(+v || 0)));
+    const wrap = (t, maxW, size, bold) => { const out = []; String(t || "").split("\n").forEach(par => { let ln = ""; par.split(" ").forEach(w => { const tr = ln ? ln + " " + w : w; if (d.width(tr, size, bold) > maxW && ln) { out.push(ln); ln = w; } else ln = tr; }); out.push(ln); }); return out; };
+    let y = 0;
+    const ensure = need => { if (y + need > H - BOT) { d.addPage(); y = TOP; } };
+    const title = (t, sub, sub2) => { const tw = d.width(t, 12.5, true);
+      d.text(t, W / 2, y + 11, { size: 12.5, bold: true, color: INK, align: "center" }); d.line(W / 2 - tw / 2, y + 14, W / 2 + tw / 2, y + 14, INK, 0.8); y += 20;
+      if (sub) { d.text(sub, W / 2, y + 10, { size: 9, color: BODY, align: "center" }); y += 12.5; }
+      if (sub2) { d.text(sub2, W / 2, y + 9, { size: 8, color: MUTED, align: "center" }); y += 11.5; } y += 12; };
+    const sec = (no, t, note) => { ensure(70); y += 6; d.text(no + ".  " + t, ML, y + 11, { size: 10.6, bold: true, color: INK }); y += 16;
+      if (note) { d.text(note, ML, y + 8, { size: 7.8, color: MUTED, maxW: CW }); y += 13; } y += 2; };
+    const grid = (cols, rows, foot) => {
+      const head = () => { d.rect(ML, y, CW, 0.8, INK); y += 1; cols.forEach(c => d.text(c[0], c[1], y + 11.5, { size: 8.2, bold: true, color: INK, align: c[2] })); y += 16.5; d.rect(ML, y, CW, 0.5, INK); y += 1; };
+      ensure(46); head();
+      rows.forEach(r0 => {
+        if (r0.group) { if (y + 34 > H - BOT) { d.addPage(); y = TOP; head(); }
+          d.text(r0.group, ML + 4, y + 12.5, { size: 8.8, bold: true, color: GOLD }); if (r0.sum) d.text(r0.sum, W - MR - 4, y + 12.5, { size: 8.8, bold: true, color: INK, align: "right" }); y += 17; d.line(ML, y, W - MR, y, RL, 0.4); return; }
+        const cellL = r0.c.map((v, k) => cols[k][3] ? wrap(v, cols[k][3], SM, r0.bold) : [v]), rh = Math.max(1, ...cellL.map(l => l.length)) * 11.5 + 6;
+        if (y + rh > H - BOT) { d.addPage(); y = TOP; head(); }
+        cellL.forEach((ls, k) => ls.forEach((l, m) => d.text(l, cols[k][1], y + 12 + m * 11.5, { size: SM, bold: !!r0.bold, color: (r0.col && r0.col[k]) || BODY, align: cols[k][2] })));
+        y += rh; d.line(ML, y, W - MR, y, RL, 0.4); });
+      if (foot) { ensure(22); d.rect(ML, y - 0.4, CW, 0.8, INK); y += 1; foot.forEach((v, k) => { if (v) d.text(v, cols[k][1], y + 12.5, { size: 9.2, bold: true, color: (foot.col && foot.col[k]) || INK, align: cols[k][2] }); }); y += 18; d.rect(ML, y, CW, 0.5, INK); d.rect(ML, y + 2.5, CW, 0.5, INK); y += 4; }
+      else d.rect(ML, y - 0.4, CW, 0.8, INK);
+      y += 12; };
+    // ===== kop & judul =====
+    y = drawKop(d, lj, ML, MR);
+    title("LAPORAN PROFIT EVENT", e.event.client || "-", "Dicetak " + fmtDateLong(todayIso()).split(", ")[1] + " pukul " + fmtTime(new Date().toISOString()));
+    // ===== data event (2 kolom kv) =====
+    const half = (CW - 28) / 2, y0 = y;
+    const kv = (rows, x0, lw, w) => rows.forEach(rw => { const ls = wrap(rw[1], w - lw - 10, 9, true);
+      d.text(rw[0], x0, y + 10, { size: 9, color: BODY }); d.text(":", x0 + lw, y + 10, { size: 9, color: BODY });
+      ls.forEach((l, k) => d.text(l, x0 + lw + 8, y + 10 + k * LH, { size: 9, bold: true, color: INK })); y += ls.length * LH + 1; });
+    kv([["Client", e.event.client || "-"], ["Paket", e.name || "-"], ["Jumlah pax", e.pax ? e.pax + " pax" : "-"]], ML, 62, half);
+    const yl = y; y = y0;
+    kv([["Tanggal acara", e.event.date ? fmtDateLong(e.event.date).split(", ")[1] : "TBC"], ["Venue", e.event.venue || "-"], ["Terakhir disimpan", e.updatedAt ? fmtDateLong(e.updatedAt.slice(0, 10)).split(", ")[1] + " " + fmtTime(e.updatedAt) : "-"]], ML + half + 28, 84, half);
+    y = Math.max(y, yl) + 12;
+    // ===== A. pendapatan =====
+    sec("A", "Pendapatan", "Harga paket ditambah add-ons yang ditagihkan ke client.");
+    const AR = [{ c: ["1", "Harga paket · " + (e.name || "-"), money(e.price || 0)] }].concat((e.addons || []).map((a, k) => ({ c: [String(k + 2), "Add-on · " + (a.name || "-"), money(a.price || 0)] })));
+    grid([["No", ML + 4], ["Keterangan", ML + 28, "left", 360], ["Jumlah", W - MR - 4, "right"]], AR, Object.assign(["", "TOTAL PENDAPATAN", money(r.revenue)], { col: [null, null, GREEN] }));
+    // ===== B. biaya =====
+    sec("B", "Rincian Biaya per Kategori", "Biaya modal event per kategori. Item bertanda \"-\" belum diisi nominalnya.");
+    const BR = []; let no = 0;
+    e.categories.forEach(c => { BR.push({ group: (c.sub ? "Biaya ops · " : "") + c.name, sum: money(r.catTotals[c.id]) });
+      (c.items.length ? c.items : [{ name: "(belum ada item)", cost: 0 }]).forEach(it => { no++; BR.push({ c: [String(no), it.name || (it.ph ? "(nama vendor belum diisi)" : "-"), it.cost ? money(it.cost) : "-"], col: [MUTED, null, it.cost ? null : MUTED] }); }); });
+    const addC = (e.addons || []).filter(a => +a.cost);
+    if (addC.length) { BR.push({ group: "Modal add-ons", sum: money(r.addCost) }); addC.forEach(a => { no++; BR.push({ c: [String(no), a.name || "-", money(a.cost)], col: [MUTED] }); }); }
+    grid([["No", ML + 4], ["Item", ML + 28, "left", 360], ["Biaya", W - MR - 4, "right"]], BR, Object.assign(["", "TOTAL BIAYA", money(r.cost)], { col: [null, null, r.cost ? RED : INK] }));
+    // ===== C. ringkasan =====
+    sec("C", "Ringkasan Profit");
+    ensure(120); const sx = W - MR - 250;
+    const line = (k, v, o) => { o = o || {}; d.text(k, sx, y + 10, { size: o.size || 9.4, bold: o.b, color: BODY }); d.text(v, W - MR - 4, y + 10, { size: o.size || 9.4, bold: o.b, color: o.c || INK, align: "right" }); y += LH + 1; };
+    line("Harga paket", money(e.price || 0)); line("Add-ons (harga ke client)", money(r.addPrice));
+    d.line(sx, y + 1, W - MR, y + 1, INK, 0.7); y += 5; line("Total pendapatan", money(r.revenue), { b: true });
+    line("Total biaya", "- " + money(r.cost), { c: r.cost ? RED : INK });
+    d.line(sx, y + 1, W - MR, y + 1, INK, 0.7); d.line(sx, y + 3.5, W - MR, y + 3.5, INK, 0.7); y += 7;
+    line("Profit perusahaan", money(r.profit), { b: true, size: 10.8, c: r.profit < 0 ? RED : GREEN });
+    line("Margin", pct(r.margin), { c: MUTED });
+    y += 6;
+    // ===== D. riwayat =====
+    const hs = (e.history || []).slice().reverse().slice(0, 15);
+    if (hs.length) { sec("D", "Riwayat Penyimpanan");
+      grid([["Waktu", ML + 4], ["Catatan", ML + 118, "left", 110], ["Pendapatan", ML + 290, "right"], ["Biaya", ML + 385, "right"], ["Profit", W - MR - 4, "right"]],
+        hs.map(x => ({ c: [fmtDate(x.at.slice(0, 10)) + " " + fmtTime(x.at), x.note || "", money(x.revenue), money(x.cost), money(x.profit)], col: [null, MUTED, null, null, x.profit < 0 ? RED : INK] }))); }
     const np = d.pages.length;
     for (let i = 0; i < np; i++) { d.onPage(i);
-      d.line(M, H - 34, W - M, H - 34, LINE, 0.5);
-      d.text("Yannie Wedding Organizer — Laporan Profit Event · " + (e.event.client || ""), M, H - 20, { size: 7.5, color: MUTED, maxW: W - 2 * M - 90 });
-      d.text("Halaman " + (i + 1) + " dari " + np, W - M, H - 20, { size: 7.5, color: MUTED, align: "right" }); }
+      d.line(ML, H - 52, W - MR, H - 52, "#bdb6a8", 0.5);
+      d.text("Laporan Profit Event  ·  Yannie Wedding Organizer", ML, H - 38, { size: 7.8, color: MUTED });
+      d.text((e.event.client || "-") + (e.event.date ? "  ·  " + fmtDate(e.event.date) : ""), ML, H - 27, { size: 7.8, color: MUTED, maxW: CW - 120 });
+      d.text("Halaman " + (i + 1) + " dari " + np, W - MR, H - 38, { size: 7.8, color: MUTED, align: "right" }); }
     return d.output();
   }
   window.__buildPdf = buildPdf;
