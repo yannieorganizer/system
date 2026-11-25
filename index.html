@@ -5106,6 +5106,8 @@
       Object.keys(by).filter(k => k !== "Buffet").forEach(k => scope.push((k === "After Akad" ? "Menu After Akad" : k) + ": " + by[k].join(", "))); }
     (x.addons || []).filter(a => (a.name || "").trim()).forEach(a => scope.push(textCase(a.name) + (addQ(a).qty > 1 ? " (" + fmt(addQ(a).qty) + " x " + rp(addQ(a).unit) + ")" : "")));
     if (x.invoice && (x.invoice.items || []).length) x.invoice.items.forEach(it => { if (it.auto === "add") return; const nm = textCase((it.desc || "").trim().replace(/^add[\s-]*on\s*:\s*/i, "")); if (nm && !scope.some(s0 => s0.toLowerCase().includes(nm.toLowerCase())) && !/^wedding package|^paket/i.test(nm)) scope.push(nm); });
+    const bonusK = x.invoice && (x.invoice.bonus || []).filter(Boolean);
+    if (bonusK && bonusK.length) scope.push("Bonus / free dari PIHAK PERTAMA (tanpa biaya tambahan): " + bonusK.join(", "));
     scope.forEach((v, k) => item((k >= 26 ? String.fromCharCode(96 + Math.floor(k / 26)) : "") + String.fromCharCode(97 + (k % 26)) + ".", v, ML + 20, { ind: 18, gap: 0 }));
     y += 2;
     item("2.", "Ketentuan penambahan layanan di luar surat perjanjian ini yang disetujui kedua pihak akan dibuat dalam dokumen tambahan.", ML);
@@ -7076,7 +7078,7 @@
     if (!ivf || ivf._for !== id) {
       const cur = x.invoice && (x.invoice.items || []).length ? clone(x.invoice) : null, s = trxState(x);
       ivf = cur || { no: "", date: todayIso(), due: (s.next && s.next.due) || addMonths(todayIso(), 0), items: autoInvItems(x), discount: 0, note: "", bank: data.invBank || YANNIE_BANK, catering: autoCatering(x), rev: 0 };
-      ivf.cashback = Object.assign({ amount: 0, note: "" }, ivf.cashback || {});
+      ivf.cashback = Object.assign({ amount: 0, note: "" }, ivf.cashback || {}); if (!Array.isArray(ivf.bonus)) ivf.bonus = [];
       if (!ivf.catering) ivf.catering = isNoCat(x) ? { pax: 0, items: [], note: "" } : autoCatering(x);
       ivf.catering.items.forEach(c => { c.kind = normKind(c.kind); });
       ivf._for = id; ivf._new = !cur;
@@ -7094,6 +7096,8 @@
         '<div class="g2"><div class="field"><label for="ivDisc">Diskon</label>' + moneyInp("ivDisc", ivf.discount) + '</div><div></div></div>' +
         '<div class="cb-box"><div class="cb-h"><b>Cashback</b><small>Opsional · tampil di invoice &amp; kontrak dan otomatis mengurangi total tagihan.</small></div>' +
         '<div class="g2"><div class="field"><label for="ivCbAmt">Nilai cashback</label>' + moneyInp("ivCbAmt", ivf.cashback.amount, "mis. 2.000.000") + '</div><div class="field"><label for="ivCbNote">Keterangan cashback</label><input class="inp" id="ivCbNote" placeholder="Diisi admin" value="' + esc(ivf.cashback.note || "") + '"></div></div></div>' +
+        '<div class="cb-box bn-box"><div class="cb-h"><b>Bonus / Free</b><small>Opsional · satu baris satu item. Tampil di invoice di bawah tabel, sebelah kiri subtotal.</small></div>' +
+        '<textarea class="inp tx-note sm" id="ivBonus" rows="4" placeholder="mis.&#10;Free showcase&#10;Free stall 200 pax @18.000&#10;Lampu beam&#10;Hias hantaran 6 box&#10;Undangan digital">' + esc((ivf.bonus || []).join("\n")) + '</textarea></div>' +
         '<div class="field"><label for="ivNote">Catatan invoice</label><textarea class="inp tx-note sm" id="ivNote" placeholder="mis. Harga sudah termasuk PPN">' + esc(ivf.note || "") + '</textarea></div>' +
         '<div class="field"><label for="ivBank">Info rekening pembayaran</label><textarea class="inp tx-note sm" id="ivBank" placeholder="mis. BCA 123xxxxx a.n. Yannie Wedding Organizer">' + esc(ivf.bank || "") + '</textarea></div></section>' +
       (isNoCat(x) ? '<section class="card tx-sec nc-freeze" aria-disabled="true"><div class="nc-lock">' + svgI('<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>') + '<b>Catering terkunci</b><span>Paket ' + esc(trxPkgLabel(x)) + ' tidak termasuk catering. Halaman 2 (rincian catering) tidak dicetak.</span></div><div class="nc-under" inert>' : '') + '<section class="card tx-sec"><h4><i>2</i>Halaman 2 · Rincian catering</h4><div class="g2"><div class="field"><label for="ivPax">Jumlah pax / porsi</label><input class="inp" id="ivPax" inputmode="numeric" value="' + (ivf.catering.pax || "") + '"></div><div></div></div>' +
@@ -7107,6 +7111,7 @@
     bindRp($("ivDisc"), v => { ivf.discount = v; ivSide(); });
     bindRp($("ivCbAmt"), v => { ivf.cashback.amount = v; ivSide(); });
     $("ivCbNote").addEventListener("input", e => { ivf.cashback.note = e.target.value; });
+    $("ivBonus").addEventListener("input", e => { ivf.bonus = e.target.value.split("\n"); });
     $("ivNote").addEventListener("input", e => { ivf.note = e.target.value; });
     $("ivBank").addEventListener("input", e => { ivf.bank = e.target.value; });
     $("ivPax").addEventListener("input", e => { const v = parse(e.target.value); e.target.value = v || ""; ivf.catering.pax = v; });
@@ -7170,7 +7175,7 @@
       if (isNoCat(x)) ivf.catering = { pax: 0, items: [], note: "" };
       const cat = { pax: ivf.catering.pax || 0, items: ivf.catering.items.filter(c => (c.name || "").trim()).map(c => ({ id: c.id, kind: c.kind, name: c.name.trim(), qty: c.qty, note: (c.note || "").trim() })), note: (ivf.catering.note || "").trim() };
       const now = new Date().toISOString();
-      x.invoice = { no: ivf.no || nextInvoiceNo(ivf.date), date: ivf.date, due: ivf.due, items, discount: +ivf.discount || 0, cashback: cbOn ? { amount: +cbv.amount, note: (cbv.note || "").trim() } : null, note: (ivf.note || "").trim(), bank: (ivf.bank || "").trim(), catering: cat, rev: (+ivf.rev || 0) + 1, sig: invSig(x), updatedAt: now, by: meName() };
+      x.invoice = { no: ivf.no || nextInvoiceNo(ivf.date), date: ivf.date, due: ivf.due, items, discount: +ivf.discount || 0, cashback: cbOn ? { amount: +cbv.amount, note: (cbv.note || "").trim() } : null, bonus: (ivf.bonus || []).map(b => { const o = String(b).replace(/^[\s\-•*·]+/, "").trim(), ow = o.split(/\s+/); return textCase(o).split(" ").map((w, k) => /^[A-Z]{2,3}$/.test(ow[k] || "") && w.toUpperCase() === ow[k] ? ow[k] : w).join(" "); }).filter(Boolean), note: (ivf.note || "").trim(), bank: (ivf.bank || "").trim(), catering: cat, rev: (+ivf.rev || 0) + 1, sig: invSig(x), updatedAt: now, by: meName() };
       if (x.invoice.bank) data.invBank = x.invoice.bank;
       x.seen = Object.assign({}, x.seen, { a3: true });
       await putTrx(x); ivf = null; toast("Invoice " + x.invoice.no + " & kontrak " + curContractNo(x) + " disimpan ✓");
@@ -7367,14 +7372,18 @@
     grid([["No", ML + 6], ["Deskripsi", ML + 32, "left", 236], ["Qty", ML + 300, "right"], ["Harga satuan", ML + 392, "right"], ["Jumlah", W - MR - 4, "right"]],
       inv.items.map((it, k) => ({ c: [String(k + 1), it.desc || "-", String(it.qty), money(+it.price || 0), money((+it.qty || 0) * (+it.price || 0))] })));
     // ringkasan
-    ensure(110); const sx = W - MR - 210;
+    const BN = (inv.bonus || []).filter(Boolean), bw = W - MR - 210 - ML - 24, bL = BN.map(b => wrap(b, bw - 12, SM + 0.2));
+    const bH = BN.length ? 16 + bL.reduce((a, l) => a + l.length * 12, 0) : 0;
+    ensure(Math.max(110, bH + 6)); const sx = W - MR - 210, yB0 = y;
+    if (BN.length) { d.text("Bonus / Free:", ML, y + 10, { size: SM + 0.4, bold: true, color: INK }); let yb = y + 16;
+      bL.forEach(ls => ls.forEach((l, k) => { if (!k) d.text("•", ML + 2, yb + 10, { size: SM + 0.2, color: GOLD }); d.text(l, ML + 12, yb + 10, { size: SM + 0.2, color: BODY }); yb += 12; })); }
     const line = (k, v, o) => { o = o || {}; d.text(k, sx, y + 10, { size: o.size || FS, bold: o.b, color: BODY }); d.text(v, W - MR - 4, y + 10, { size: o.size || FS, bold: o.b, color: o.c || INK, align: "right" }); y += LH; };
     line("Subtotal", money(gross + (+inv.discount || 0))); if (+inv.discount) line("Diskon", "- " + money(+inv.discount)); if (cbo) line("Cashback", "- " + money(cbo.amount), { c: "#1f6b3e" });
     d.line(sx, y + 1, W - MR, y + 1, INK, 0.7); y += 5; line("Total", money(tot), { b: true, size: 10.6 });
     line("Sudah dibayar", money(paid), { c: "#1f6b3e" });
     d.line(sx, y + 1, W - MR, y + 1, INK, 0.7); d.line(sx, y + 3.5, W - MR, y + 3.5, INK, 0.7); y += 7;
     line(paid >= tot ? "Status" : "Sisa tagihan", paid >= tot ? "LUNAS" : money(Math.max(0, tot - paid)), { b: true, size: 10.8, c: paid >= tot ? "#1f6b3e" : "#9b2c22" });
-    y += 4; ensure(LH * 2);
+    y = Math.max(y, yB0 + bH); y += 4; ensure(LH * 2);
     wrap("Terbilang: " + terbilang(tot), CW, SM).forEach(l => { d.text(l, ML, y + 10, { size: SM, color: BODY }); y += 12.5; }); y += 8;
     if (cbo && cbo.note) { ensure(LH * 3); const t = "Cashback " + money(cbo.amount) + ": " + cbo.note;
       d.rect(ML, y, CW, 0.8, GOLD); y += 4; wrap(t, CW - 8, SM + 0.4).forEach(l => { d.text(l, ML + 4, y + 10, { size: SM + 0.4, bold: true, color: "#1f6b3e" }); y += 12.5; }); y += 4; d.rect(ML, y, CW, 0.8, GOLD); y += 10; }
@@ -7902,9 +7911,10 @@
     // breakdown kategori (periode)
     const grp = dir => { const m = {}; per.filter(e => e.dir === dir).forEach(e => { m[e.cat] = (m[e.cat] || 0) + e.amount; }); return Object.entries(m).sort((a, b) => b[1] - a[1]); };
     const gOut = grp("out"), gIn = grp("in");
-    const bars = (arr, dir) => { if (!arr.length) return '<div class="tx-empty sm">Belum ada data di periode ini</div>'; const mx = arr[0][1], tot = arr.reduce((a, x) => a + x[1], 0);
+    ["DP", "Full payment", "Pembayaran lanjutan", "Pelunasan"].forEach(k => { if (!gIn.some(g => g[0] === k)) gIn.push([k, 0]); }); gIn.sort((a, b) => b[1] - a[1]);
+    const bars = (arr, dir) => { if (!arr.length) return '<div class="tx-empty sm">Belum ada data di periode ini</div>'; const mx = arr[0][1] || 1, tot = arr.reduce((a, x) => a + x[1], 0) || 1;
       const top = arr.slice(0, 7), rest = arr.slice(7).reduce((a, x) => a + x[1], 0); if (rest) top.push(["Lainnya", rest]);
-      return top.map(x => '<div class="cfb"><div class="cfb-l"><span>' + esc(x[0]) + '</span><b>' + rp(x[1]) + '</b></div><div class="cfb-t"><i class="' + dir + '" style="width:' + Math.max(2, x[1] / mx * 100) + '%"></i></div><small>' + (x[1] / tot * 100).toFixed(1).replace(".", ",") + '%</small></div>').join(""); };
+      return top.map(x => '<div class="cfb"><div class="cfb-l"><span>' + esc(x[0]) + '</span><b>' + rp(x[1]) + '</b></div><div class="cfb-t"><i class="' + dir + '" style="width:' + (x[1] ? Math.max(2, x[1] / mx * 100) : 0) + '%"></i></div><small>' + (x[1] / tot * 100).toFixed(1).replace(".", ",") + '%</small></div>').join(""); };
     h += '<div class="cf-grid"><section class="card tx-card"><h4>Kas masuk per jenis<span>' + esc(P.label) + '</span></h4>' + bars(gIn, "in") + '</section>' +
       '<section class="card tx-card"><h4>Kas keluar per kategori<span>' + esc(P.label) + '</span></h4>' + bars(gOut, "out") + '</section></div>';
     // buku kas
