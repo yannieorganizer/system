@@ -5386,7 +5386,7 @@
     bindFmInputs();
     $("fPkg").addEventListener("change", e => {
       const t = state.templates[e.target.value]; fm.templateId = t ? t.id : ""; const wasC = fm.custom, wasT = fm.tbc; fm.custom = e.target.value === "__custom"; fm.tbc = e.target.value === "__tbc";
-      Object.assign(fm, t ? { packageName: t.name, venue: t.event.venue || "", pax: +t.pax || 0, price: +t.price || 0 } : fm.custom && wasC ? {} : fm.tbc ? (wasT ? {} : { packageName: "TBC", venue: "TBC", pax: 0, price: 0, noCatering: false }) : { packageName: "", venue: "", pax: 0, price: 0, noCatering: false }); fm.paxAdj = false;
+      Object.assign(fm, t ? { packageName: t.name, venue: t.event.venue || "", pax: +t.pax || 0, price: +t.price || 0 } : fm.custom && wasC ? {} : fm.tbc ? (wasT ? {} : { packageName: "TBC", venue: "TBC", pax: 0, price: 0, noCatering: false }) : { packageName: "", venue: "", pax: 0, price: 0, noCatering: false }); fm.paxAdj = false; fm.priceManual = false;
       if (fm.custom) setTimeout(() => { const n = $("fCName"); if (n) n.focus(); }, 30);
       $("fVenue2").value = fm.venue; $("fPax2").value = fm.pax || ""; renderFormPkg(); renderFormSide();
     });
@@ -5437,25 +5437,30 @@
     const t = state.templates[fm.templateId], paxOpen = t && (t.paxEditable || t.id === "harris-ballroom" || t.templateId === "harris-ballroom");
     const stdPax = t ? +t.pax || 0 : 0, stdPrice = t ? +t.price || 0 : 0;
     if (t && fm.paxAdj == null) fm.paxAdj = (+fm.pax || 0) !== stdPax || (+fm.price || 0) !== stdPrice;
-    const adj = !!(t && fm.paxAdj && !paxOpen), editPax = paxOpen || adj;
+    const adj = !!(t && fm.paxAdj && !paxOpen), editPax = paxOpen || adj, man = !!(t && fm.priceManual && !adj), editPrice = adj || man;
     const vOpen = !!(t && t.venueOpen);
     $("fPkgInfo").innerHTML = '<div class="field"><label for="fVenueIn">Venue / lokasi acara' + (vOpen ? " *" : "") + '</label>' + (vOpen ? '<input class="inp" id="fVenueIn" placeholder="mis. Rumah CPW, Jl. Melati 12 Bekasi" value="' + esc(fm.venue) + '">' : '<input class="inp locked" readonly tabindex="-1" value="' + esc(fm.venue || (t ? "-" : "")) + '" placeholder="otomatis dari paket">') +
         (t && t.noCatering ? '<small class="nc-badge">' + svgI('<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>') + 'Paket tanpa catering · bagian catering terkunci</small>' : '') + '</div>' +
       '<div class="field"><label for="fPax">Pax</label><input class="inp' + (editPax ? "" : " locked") + '" id="fPax" inputmode="numeric" ' + (editPax ? 'placeholder="' + (adj && stdPax ? "maks. " + stdPax : "Ketik jumlah pax") + '"' : 'readonly tabindex="-1" placeholder="' + (t && !stdPax ? "tanpa pax" : "otomatis") + '"') + ' value="' + (fm.pax || "") + '">' +
         (t && !paxOpen ? '<label class="px-ck"><input type="checkbox" id="fPaxStd"' + (adj ? "" : " checked") + '><span>Sesuai paket' + (stdPax ? " (" + fmt(stdPax) + " pax)" : "") + '</span></label>' : '') + '</div>' +
-      '<div class="field"><label for="fPrice">Nilai paket</label>' + (adj ? moneyInp("fPrice", fm.price, "maks. " + fmt(stdPrice)) : '<input class="inp locked" readonly tabindex="-1" value="' + (t ? rp(fm.price) : "") + '" placeholder="otomatis dari paket">') +
-        (adj ? '<small class="px-note" id="fPxNote"></small>' : '') + '</div>';
+      '<div class="field"><label for="fPrice">Nilai paket</label>' + (editPrice ? moneyInp("fPrice", fm.price, adj ? "maks. " + fmt(stdPrice) : "Ketik nilai paket") : '<input class="inp locked" readonly tabindex="-1" value="' + (t ? rp(fm.price) : "") + '" placeholder="otomatis dari paket">') +
+        (t && !adj ? '<label class="px-ck"><input type="checkbox" id="fPriceStd"' + (man ? "" : " checked") + '><span>Sesuai paket' + (stdPrice ? " (" + rp(stdPrice) + ")" : "") + '</span></label>' : '') +
+        (editPrice ? '<small class="px-note" id="fPxNote"></small>' : '') + '</div>';
     const note = () => { const n = $("fPxNote"); if (!n) return; const diff = stdPrice - (+fm.price || 0);
+      if (man) { n.innerHTML = 'Nilai diinput manual · standar paket ' + rp(stdPrice) + (diff > 0 ? ' · <b>lebih murah ' + rp(diff) + '</b>' : diff < 0 ? ' · <b>lebih tinggi ' + rp(-diff) + '</b>' : ''); return; }
       n.innerHTML = 'Standar ' + (stdPax ? fmt(stdPax) + ' pax · ' : '') + rp(stdPrice) + (diff > 0 ? ' · <b>lebih murah ' + rp(diff) + '</b>' : '') + '<br>Tidak bisa melebihi nilai paket — kelebihan dimasukkan lewat Add-ons (Admin 3).'; };
     if (editPax) $("fPax").addEventListener("input", e => { let v = parse(e.target.value);
       if (adj && stdPax && v > stdPax) { v = stdPax; toast("Pax tidak bisa melebihi standar paket (" + fmt(stdPax) + "). Tambahan tamu masuk lewat Add-ons."); }
       e.target.value = v || ""; fm.pax = v; if ($("fPax2")) $("fPax2").value = v || ""; renderFormSide(); });
     if ($("fPrice")) { const el = $("fPrice"); el.addEventListener("input", () => { let v = parse(el.value);
-        if (stdPrice && v > stdPrice) { v = stdPrice; toast("Nilai paket tidak bisa melebihi " + rp(stdPrice) + ". Tambahan biaya masuk lewat Add-ons."); }
+        if (adj && stdPrice && v > stdPrice) { v = stdPrice; toast("Nilai paket tidak bisa melebihi " + rp(stdPrice) + ". Tambahan biaya masuk lewat Add-ons."); }
         el.value = v ? fmt(v) : ""; fm.price = v; note(); renderFormSide(); }); note(); }
     if ($("fVenueIn")) $("fVenueIn").addEventListener("input", e => { fm.venue = e.target.value; if ($("fVenue2")) $("fVenue2").value = fm.venue; renderFormSide(); });
+    if ($("fPriceStd")) $("fPriceStd").addEventListener("change", e => { fm.priceManual = !e.target.checked;
+      if (!fm.priceManual) fm.price = stdPrice;
+      renderFormPkg(); renderFormSide(); if (fm.priceManual) setTimeout(() => { $("fPrice").focus(); $("fPrice").select(); }, 30); });
     if ($("fPaxStd")) $("fPaxStd").addEventListener("change", e => { fm.paxAdj = !e.target.checked;
-      if (!fm.paxAdj) { fm.pax = stdPax; fm.price = stdPrice; if ($("fPax2")) $("fPax2").value = stdPax || ""; }
+      if (!fm.paxAdj) { fm.pax = stdPax; if (!fm.priceManual) fm.price = stdPrice; if ($("fPax2")) $("fPax2").value = stdPax || ""; }
       renderFormPkg(); renderFormSide(); if (fm.paxAdj) setTimeout(() => { $("fPax").focus(); $("fPax").select(); }, 30); });
   }
   function renderFormAddons(){
@@ -5506,7 +5511,7 @@
       try { await putProof(pr); oldIds.forEach(o => { delete data.proofs[o]; if (db) db.collection("proofs").doc(o).delete().catch(() => {}); }); ktp = { [k]: pr.id }; } catch (err) { toast(err.message); } }
     const base = { cpp: Object.assign({}, ex ? ex.cpp : {}, { name: fm.cpp.name, phone: fm.cpp.phone }), cpw: Object.assign({}, ex ? ex.cpw : {}, { name: fm.cpw.name, phone: fm.cpw.phone }),
       ktp, address: (fm.address || "").trim(), addressOf: fm.addressOf, signOf: fm.signOf || fm.addressOf, signer: { pob: (fm.signer.pob || "").trim(), dob: (fm.signer.dob || "").trim(), job: (fm.signer.job || "").trim() }, akad: { date: fm.akad.tbc ? "" : fm.akad.date, start: fm.akad.start || "", end: fm.akad.end || "", tbc: !!fm.akad.tbc }, resepsi: { date: fm.resepsi.tbc ? "" : fm.resepsi.date, start: fm.resepsi.start || "", end: fm.resepsi.end || "", tbc: !!fm.resepsi.tbc, same: !!fm.resepsi.same },
-      templateId: fm.templateId, packageName: fm.packageName, venue: fm.venue, pax: fm.pax, price: fm.price, paxAdj: !!fm.paxAdj, custom: !!fm.custom, tbc: !!fm.tbc, noCatering: fm.custom ? !!fm.noCatering : !!(state.templates[fm.templateId] && state.templates[fm.templateId].noCatering), addons };
+      templateId: fm.templateId, packageName: fm.packageName, venue: fm.venue, pax: fm.pax, price: fm.price, paxAdj: !!fm.paxAdj, priceManual: !!(fm.priceManual && !fm.paxAdj), custom: !!fm.custom, tbc: !!fm.tbc, noCatering: fm.custom ? !!fm.noCatering : !!(state.templates[fm.templateId] && state.templates[fm.templateId].noCatering), addons };
     if (fm.custom || fm.tbc) base.templateId = "";
     if (fm.tbc) { base.packageName = "TBC"; base.venue = "TBC"; }
     if (ex && ex.tbc && !fm.tbc) { base.tbcResolvedAt = new Date().toISOString(); if (ex.venueBooking && ex.venueBooking.venue === "TBC") base.venueBooking = { status: "belum" }; }
