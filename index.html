@@ -5441,19 +5441,16 @@
     const vOpen = !!(t && t.venueOpen);
     $("fPkgInfo").innerHTML = '<div class="field"><label for="fVenueIn">Venue / lokasi acara' + (vOpen ? " *" : "") + '</label>' + (vOpen ? '<input class="inp" id="fVenueIn" placeholder="mis. Rumah CPW, Jl. Melati 12 Bekasi" value="' + esc(fm.venue) + '">' : '<input class="inp locked" readonly tabindex="-1" value="' + esc(fm.venue || (t ? "-" : "")) + '" placeholder="otomatis dari paket">') +
         (t && t.noCatering ? '<small class="nc-badge">' + svgI('<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>') + 'Paket tanpa catering · bagian catering terkunci</small>' : '') + '</div>' +
-      '<div class="field"><label for="fPax">Pax</label><input class="inp' + (editPax ? "" : " locked") + '" id="fPax" inputmode="numeric" ' + (editPax ? 'placeholder="' + (adj && stdPax ? "maks. " + stdPax : "Ketik jumlah pax") + '"' : 'readonly tabindex="-1" placeholder="' + (t && !stdPax ? "tanpa pax" : "otomatis") + '"') + ' value="' + (fm.pax || "") + '">' +
+      '<div class="field"><label for="fPax">Pax</label><input class="inp' + (editPax ? "" : " locked") + '" id="fPax" inputmode="numeric" ' + (editPax ? 'placeholder="' + "Ketik jumlah pax" + '"' : 'readonly tabindex="-1" placeholder="' + (t && !stdPax ? "tanpa pax" : "otomatis") + '"') + ' value="' + (fm.pax || "") + '">' +
         (t && !paxOpen ? '<label class="px-ck"><input type="checkbox" id="fPaxStd"' + (adj ? "" : " checked") + '><span>Sesuai paket' + (stdPax ? " (" + fmt(stdPax) + " pax)" : "") + '</span></label>' : '') + '</div>' +
-      '<div class="field"><label for="fPrice">Nilai paket</label>' + (editPrice ? moneyInp("fPrice", fm.price, adj ? "maks. " + fmt(stdPrice) : "Ketik nilai paket") : '<input class="inp locked" readonly tabindex="-1" value="' + (t ? rp(fm.price) : "") + '" placeholder="otomatis dari paket">') +
+      '<div class="field"><label for="fPrice">Nilai paket</label>' + (editPrice ? moneyInp("fPrice", fm.price, "Ketik nilai paket") : '<input class="inp locked" readonly tabindex="-1" value="' + (t ? rp(fm.price) : "") + '" placeholder="otomatis dari paket">') +
         (t && !adj ? '<label class="px-ck"><input type="checkbox" id="fPriceStd"' + (man ? "" : " checked") + '><span>Sesuai paket' + (stdPrice ? " (" + rp(stdPrice) + ")" : "") + '</span></label>' : '') +
         (editPrice ? '<small class="px-note" id="fPxNote"></small>' : '') + '</div>';
     const note = () => { const n = $("fPxNote"); if (!n) return; const diff = stdPrice - (+fm.price || 0);
-      if (man) { n.innerHTML = 'Nilai diinput manual · standar paket ' + rp(stdPrice) + (diff > 0 ? ' · <b>lebih murah ' + rp(diff) + '</b>' : diff < 0 ? ' · <b>lebih tinggi ' + rp(-diff) + '</b>' : ''); return; }
-      n.innerHTML = 'Standar ' + (stdPax ? fmt(stdPax) + ' pax · ' : '') + rp(stdPrice) + (diff > 0 ? ' · <b>lebih murah ' + rp(diff) + '</b>' : '') + '<br>Tidak bisa melebihi nilai paket — kelebihan dimasukkan lewat Add-ons (Admin 3).'; };
+      n.innerHTML = (man ? 'Nilai diinput manual · ' : '') + 'Standar paket ' + (stdPax ? fmt(stdPax) + ' pax · ' : '') + rp(stdPrice) + (diff > 0 ? ' · <b>lebih murah ' + rp(diff) + '</b>' : diff < 0 ? ' · <b>lebih tinggi ' + rp(-diff) + '</b>' : ''); };
     if (editPax) $("fPax").addEventListener("input", e => { let v = parse(e.target.value);
-      if (adj && stdPax && v > stdPax) { v = stdPax; toast("Pax tidak bisa melebihi standar paket (" + fmt(stdPax) + "). Tambahan tamu masuk lewat Add-ons."); }
       e.target.value = v || ""; fm.pax = v; if ($("fPax2")) $("fPax2").value = v || ""; renderFormSide(); });
     if ($("fPrice")) { const el = $("fPrice"); el.addEventListener("input", () => { let v = parse(el.value);
-        if (adj && stdPrice && v > stdPrice) { v = stdPrice; toast("Nilai paket tidak bisa melebihi " + rp(stdPrice) + ". Tambahan biaya masuk lewat Add-ons."); }
         el.value = v ? fmt(v) : ""; fm.price = v; note(); renderFormSide(); }); note(); }
     if ($("fVenueIn")) $("fVenueIn").addEventListener("input", e => { fm.venue = e.target.value; if ($("fVenue2")) $("fVenue2").value = fm.venue; renderFormSide(); });
     if ($("fPriceStd")) $("fPriceStd").addEventListener("change", e => { fm.priceManual = !e.target.checked;
