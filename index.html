@@ -2354,6 +2354,10 @@
   .ev-cl-hint{display:block;font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.4}
   #evClientSel{width:100%}
   .pax-note{display:block;font-size:12px;color:var(--muted);margin-top:6px} .pax-note b{color:var(--hi)}
+  .rd-row{display:grid;grid-template-columns:minmax(0,1fr) 190px 40px;gap:8px;align-items:center;margin-bottom:8px}
+  .rd-box .btn.small{margin-top:2px;gap:7px}
+  .rd-box .btn svg{fill:none!important;stroke:currentColor!important;stroke-width:1.9;width:15px;height:15px}
+  @media (max-width:640px){ .rd-row{grid-template-columns:minmax(0,1fr) 40px}.rd-row .rp-inp{grid-column:1/2} }
 </style>
 </head>
 <body data-view="login">
@@ -2741,6 +2745,8 @@
       NC("outdoor-non-catering", "Wedding Package Outdoor — Non Catering", 34000000, { group: "Non Catering" }),
       NC("resto-non-catering", "Wedding Package Resto — Non Catering", 33500000, { group: "Non Catering" }),
       NC("aula-non-catering", "Wedding Package Aula — Non Catering", 34500000, { group: "Non Catering" }),
+      pkg({ id: "aula-catering-500", fullName: "Wedding Package Aula + Catering 500 Pax", venue: "Lokasi client", pax: 500, price: 0, noVenue: true, venueOpen: true, group: "Aula",
+        dekor: dekor("6 meter", [...DEKOR_BASE, "Set akad", "Dekor photobooth", "Galeri foto"]), food: FOOD_STD, free: ["Softlens normal", "White henna dan fake nails"] }),
       NC("gedung-non-catering", "Wedding Package Gedung — Non Catering", 45000000, { group: "Non Catering" }),
       pkg({ id: "gedung-mk-500", venue: "Gedung MK", pax: 500, price: 165000000,
         dekor: dekor("10 meter", [...DEKOR_BASE, "Set akad Tiffani","Gazebo kotak","Pergola","Galeri foto","Dekor photobooth"]),
@@ -3346,6 +3352,7 @@
     if (o.custom && typeof o.custom.name === "string") o.custom.name = textCase(o.custom.name);
     if (o.venueBooking && o.venueBooking.venue) o.venueBooking.venue = textCase(o.venueBooking.venue);
     (o.addons || []).forEach(a => { if (a && a.name) a.name = textCase(a.name); });
+    if (Array.isArray(o.vendors) && o.vendors.length && !o.vendors.some(v => v && /^wo\b|wedding organizer/i.test(v.cat || ""))) o.vendors.push({ id: uid("vd"), cat: "WO", name: "Yannie Wedding Organizer", contact: "", status: "belum", date: "", note: "" });
     (o.vendors || []).forEach(v => { if (v && v.name) v.name = textCase(v.name); if (v && /^rias[\s&]*(dan\s*|&\s*)?busana$/i.test((v.cat || "").trim())) v.cat = "MUA"; });
     if (o.invoice) { (o.invoice.items || []).forEach(i => { if (i && i.desc) { let d = textCase(i.desc); const m = d.match(/\s—\s(\d[\d.]*)\s*pax$/i); if (m && new RegExp("\\b" + m[1].replace(/\./g, "\\.") + "\\s*pax\\b", "i").test(d.slice(0, m.index))) d = d.slice(0, m.index); i.desc = d; } }); const c = o.invoice.catering; if (c && c.items) c.items.forEach(i => { if (i && i.name) i.name = textCase(i.name); });
       if (sig0 && o.invoice.sig === sig0) o.invoice.sig = sigF(o); }
@@ -4843,7 +4850,8 @@
   const trxGross = x => x.invoice && (x.invoice.items || []).length ? invTotal(x.invoice) : (+x.price || 0) + trxAddTotal(x);
   // cashback: bila total pembayaran client mencapai syarat (opsional sebelum tanggal tertentu), nilai transaksi otomatis dikurangi cashback
   function cbInfo(x){ const c = x && x.invoice && x.invoice.cashback; if (!c || !(+c.amount > 0)) return null; return { amount: +c.amount, note: c.note || "", ok: true }; }
-  const trxTotal = x => { const g = trxGross(x), c = cbInfo(x); return c ? Math.max(0, g - c.amount) : g; };
+  function redInfo(x){ const r = x && x.invoice && x.invoice.reduce; const L = Array.isArray(r) ? r.filter(i => +i.amount > 0) : []; return L.length ? { items: L, amount: L.reduce((a, i) => a + (+i.amount || 0), 0) } : null; }
+  const trxTotal = x => { const g = trxGross(x), c = cbInfo(x), rd = redInfo(x); return Math.max(0, g - (c ? c.amount : 0) - (rd ? rd.amount : 0)); };
   const trxPaid = x => (x.payments || []).reduce((a, b) => a + (+b.amount || 0), 0);
   const trxList = () => Object.values(data.transactions || {}).filter(x => x && !x.demo && x.payments);
   const evTbc = x => (x && ((x.akad && x.akad.tbc) || (x.resepsi && x.resepsi.tbc))) ? "TBC" : "-";
@@ -5114,7 +5122,9 @@
     // ---- Pasal 4 ----
     pasal(4, "Biaya");
     item("1.", "**PIHAK PERTAMA** dan **PIHAK KEDUA** sepakat bahwa biaya pemakaian jasa beserta segala keperluan Event Wedding sebagaimana dimaksud dalam perjanjian ini adalah sebesar **" + money(total) + "** (" + terbilang(total) + ").", ML);
-    { const c = cbInfo(x); if (c) item("2.", "Biaya tersebut **sudah dikurangi cashback sebesar " + money(c.amount) + "** dari **PIHAK PERTAMA**." + (c.note ? " " + c.note.replace(/([^.!?])$/, "$1.") : ""), ML); }
+    { const c = cbInfo(x), rd = redInfo(x); let no = 2;
+      if (rd) { item(no + ".", "Biaya tersebut **sudah dikurangi pengurangan layanan paket sebesar " + money(rd.amount) + "** yang tidak dipakai **PIHAK KEDUA**, yaitu: " + rd.items.map(r => r.name + " (" + money(r.amount) + ")").join(", ") + ".", ML); no++; }
+      if (c) item(no + ".", "Biaya tersebut **sudah dikurangi cashback sebesar " + money(c.amount) + "** dari **PIHAK PERTAMA**." + (c.note ? " " + c.note.replace(/([^.!?])$/, "$1.") : ""), ML); }
     // ---- Pasal 5 ----
     pasal(5, "Cara Pembayaran", LH * 9);
     rich("**PARA PIHAK** sepakat bahwa untuk pembayaran biaya jasa dan segala keperluan acara sebagaimana yang dimaksud ditetapkan sebagai berikut:", ML, CW); y += 4;
@@ -5366,7 +5376,7 @@
       '<div class="tx-form"><div class="tx-col">' +
       '<section class="card tx-sec"><h4><i>1</i>Paket</h4>' +
         '<div class="field"><label for="fPkg">Paket yang diambil *</label><select id="fPkg" class="inp"><option value="">— Pilih paket —</option><option value="__tbc"' + (fm.tbc ? " selected" : "") + '>⏳ TBC · To Be Confirmed (paket belum dipilih)</option><option value="__custom"' + (fm.custom ? " selected" : "") + '>✎ Paket custom (isi sendiri)</option>' +
-        [["", "Paket gedung · all in"], ["Rumahan", "Paket rumahan"], ["Non Catering", "Paket non catering"], ["Rias Busana", "Paket rias busana"]].map(g => { const L = tpls.filter(t => (t.group || "") === g[0]); return L.length ? '<optgroup label="' + g[1] + '">' + L.map(t => '<option value="' + t.id + '"' + (t.id === fm.templateId ? " selected" : "") + '>' + esc(t.name || "Paket tanpa nama") + (t.noCatering && t.group !== "Non Catering" && t.group !== "Rias Busana" ? " · Non Catering" : "") + '</option>').join("") + '</optgroup>' : ""; }).join("") + '</select></div>' +
+        [["", "Paket gedung · all in"], ["Rumahan", "Paket rumahan"], ["Aula", "Paket aula + catering"], ["Non Catering", "Paket non catering"], ["Rias Busana", "Paket rias busana"]].map(g => { const L = tpls.filter(t => (t.group || "") === g[0]); return L.length ? '<optgroup label="' + g[1] + '">' + L.map(t => '<option value="' + t.id + '"' + (t.id === fm.templateId ? " selected" : "") + '>' + esc(t.name || "Paket tanpa nama") + (t.noCatering && t.group !== "Non Catering" && t.group !== "Rias Busana" ? " · Non Catering" : "") + '</option>').join("") + '</optgroup>' : ""; }).join("") + '</select></div>' +
         '<div class="g3" id="fPkgInfo"></div></section>' +
       '<section class="card tx-sec"><h4><i>2</i>Calon pengantin</h4><div class="cp-grid">' + person1("cpp", "Calon Pengantin Pria", "CPP") + person1("cpw", "Calon Pengantin Wanita", "CPW") + '</div>' +
         '<div class="ktp-box"><div class="field"><label>KTP (cukup salah satu)</label><div class="seg" data-seg="ktpOf"><button type="button" data-v="cpp">KTP CPP</button><button type="button" data-v="cpw">KTP CPW</button></div></div>' +
@@ -5661,7 +5671,7 @@
     const t = state.templates[x.templateId], skip = /operasional|venue|gedung|wedding organizer|^wo\b|free|bonus|menu after|gubukan/i;
     const cats = t ? t.categories.filter(c => !skip.test(c.name || "") && c.id !== "venue" && c.id !== "wo").map(c => (c.name || "").trim()).filter(Boolean) : [];
     const list = cats.length ? cats : ["Rias & busana", "Dekorasi", "Dokumentasi", "Hiburan / entertainment", "MC", "Catering"];
-    return list.map(n => ({ id: uid("vd"), cat: venCat(properCase(n)), name: "", contact: "", status: "belum", date: "", note: "" }));
+    return list.concat(["WO"]).map(n => ({ id: uid("vd"), cat: n === "WO" ? "WO" : venCat(properCase(n)), name: n === "WO" ? "Yannie Wedding Organizer" : "", contact: "", status: "belum", date: "", note: "" }));
   }
   function stageInfo(x){
     const v = (x.vendors || []).filter(a => a.status !== "batal"), booked = v.filter(a => a.status === "booked").length, t0 = todayIso();
@@ -6929,7 +6939,7 @@
       (function(){ const w = wbStats(x); return '<button type="button" class="wb-link" data-go="trx-' + x.id + '/wardrobe">' + svgI('<path d="M8 3 4 6l2 4 2-1v12h8V9l2 1 2-4-4-3a4 4 0 0 1-8 0z"/>') + '<span><b>Busana &amp; perlengkapan ' + admTag("a4") + '</b><small>' + (w.n ? w.groups + ' orang · ' + w.siap + '/' + w.n + ' item siap' : 'Baju akad & resepsi CPP, CPW, orang tua, among tamu — belum diisi') + '</small></span>' + svgI('<path d="m9 18 6-6-6-6"/>') + '</button>'; })() +
       '</section></div>' +
       '<div class="tx-col"><section class="card tx-card"><h4>Booking vendor<span>' + stageInfo(x).booked + '/' + stageInfo(x).act + ' booked</span></h4>' +
-      '<div class="ven-list">' + x.vendors.map(v => '<div class="ven ' + v.status + '" data-vid="' + v.id + '"><div class="ven-h"><input class="inp ven-cat" data-vf="cat" value="' + esc(properCase(v.cat)) + '" aria-label="Kategori vendor"><select class="inp ven-st" data-vf="status">' + Object.entries(VEN_ST).filter(e => e[0] !== "batal" || v.status === "batal").map(e => '<option value="' + e[0] + '"' + (v.status === e[0] ? " selected" : "") + '>' + e[1] + '</option>').join("") + '</select></div>' +
+      '<div class="ven-list">' + x.vendors.map(v => '<div class="ven ' + v.status + '" data-vid="' + v.id + '"><div class="ven-h"><input class="inp ven-cat" data-vf="cat" value="' + esc(properCase(v.cat)) + '" aria-label="Kategori vendor"><select class="inp ven-st" data-vf="status">' + Object.entries(VEN_ST).map(e => '<option value="' + e[0] + '"' + (v.status === e[0] ? " selected" : "") + '>' + e[1] + '</option>').join("") + '</select></div>' +
         '<div class="g2"><input class="inp" data-vf="name" placeholder="Nama vendor" value="' + esc(properCase(v.name)) + '"><input class="inp" data-vf="contact" placeholder="Kontak / no. HP vendor" value="' + esc(v.contact) + '"></div>' +
         '<div class="ven-f"><input class="inp" data-vf="note" placeholder="Catatan (paket vendor, DP vendor, dll.)" value="' + esc(v.note) + '"><button class="btn small ghost py-del" data-vdel="' + v.id + '" title="Hapus">' + svgI('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>') + '</button></div>' +
         (v.status === "booked" && v.date ? '<small class="ven-d">Booked ' + fmtDate(v.date) + '</small>' : '') + '</div>').join("") + '</div>' +
@@ -6989,7 +6999,7 @@
       : '<div class="tx-empty sm">Belum ada pembayaran</div>') + '<input type="file" id="addProofInp" accept="image/*,application/pdf" hidden></section>';
     const inv = x.invoice || {};
     const invH = '<section class="card tx-card"><h4>Invoice ' + admTag("a3") + '</h4>' + (st.inv
-      ? '<div class="sd-no"><small>No. invoice' + (inv.rev > 1 ? " · revisi " + inv.rev : "") + '</small><b>' + esc(inv.no) + '</b></div>' + rowKV("Tanggal", fmtDate(inv.date)) + rowKV("Jatuh tempo", inv.due ? fmtDate(inv.due) : "-") + rowKV("Item", inv.items.length + " baris" + (+inv.discount ? " · diskon " + rp(inv.discount) : "")) + rowKV("Total invoice", '<b>' + rp(trxTotal(x)) + '</b>') + (cbInfo(x) ? rowKV("Cashback", '−' + rp(cbInfo(x).amount) + (cbInfo(x).note ? ' · ' + esc(cbInfo(x).note) : '')) : '') + rowKV("Rincian catering", (inv.catering && (inv.catering.items || []).length ? inv.catering.items.length + " menu" : "belum diisi") + " · " + ((inv.catering && inv.catering.pax) || x.pax || "-") + " pax") +
+      ? '<div class="sd-no"><small>No. invoice' + (inv.rev > 1 ? " · revisi " + inv.rev : "") + '</small><b>' + esc(inv.no) + '</b></div>' + rowKV("Tanggal", fmtDate(inv.date)) + rowKV("Jatuh tempo", inv.due ? fmtDate(inv.due) : "-") + rowKV("Item", inv.items.length + " baris" + (+inv.discount ? " · diskon " + rp(inv.discount) : "")) + rowKV("Total invoice", '<b>' + rp(trxTotal(x)) + '</b>') + (cbInfo(x) ? rowKV("Cashback", '−' + rp(cbInfo(x).amount) + (cbInfo(x).note ? ' · ' + esc(cbInfo(x).note) : '')) : '') + (redInfo(x) ? redInfo(x).items.map(r => rowKV("Pengurangan", '−' + rp(r.amount) + ' · ' + esc(r.name))).join("") : '') + rowKV("Rincian catering", (inv.catering && (inv.catering.items || []).length ? inv.catering.items.length + " menu" : "belum diisi") + " · " + ((inv.catering && inv.catering.pax) || x.pax || "-") + " pax") +
         '<div class="inv-act"><button class="btn small" data-go="trx-invoice-' + x.id + '">' + svgI('<path d="M4 20h4L19 9l-4-4L4 16z"/>') + 'Edit invoice</button><button class="btn small gold" id="invPdf2">' + svgI('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>') + 'Unduh PDF</button></div>'
       : '<p class="tx-hint">Invoice dibuat otomatis dari paket &amp; add-ons, lalu bisa diketik/diubah manual. Halaman 2 berisi rincian catering.</p><button class="btn gold sd-save" data-go="trx-invoice-' + x.id + '">' + svgI('<path d="M12 5v14M5 12h14"/>') + 'Buat invoice</button>') + '</section>';
     const vbH = '<section class="card tx-card vb-card ' + vb.status + '"><h4>Booking venue ' + admTag("a3") + '</h4><div class="vb-venue"><small>Venue dari paket</small><b>' + esc(x.venue || "-") + '</b><small>' + (x.date ? fmtDateLong(x.date) : "") + (x.pax ? " · " + x.pax + " pax" : "") + '</small></div>' +
@@ -7080,7 +7090,7 @@
     if (!ivf || ivf._for !== id) {
       const cur = x.invoice && (x.invoice.items || []).length ? clone(x.invoice) : null, s = trxState(x);
       ivf = cur || { no: "", date: todayIso(), due: (s.next && s.next.due) || addMonths(todayIso(), 0), items: autoInvItems(x), discount: 0, note: "", bank: data.invBank || YANNIE_BANK, catering: autoCatering(x), rev: 0 };
-      ivf.cashback = Object.assign({ amount: 0, note: "" }, ivf.cashback || {}); if (!Array.isArray(ivf.bonus)) ivf.bonus = [];
+      ivf.cashback = Object.assign({ amount: 0, note: "" }, ivf.cashback || {}); if (!Array.isArray(ivf.bonus)) ivf.bonus = []; if (!Array.isArray(ivf.reduce)) ivf.reduce = [];
       if (!ivf.catering) ivf.catering = isNoCat(x) ? { pax: 0, items: [], note: "" } : autoCatering(x);
       ivf.catering.items.forEach(c => { c.kind = normKind(c.kind); });
       ivf._for = id; ivf._new = !cur;
@@ -7098,6 +7108,8 @@
         '<div class="g2"><div class="field"><label for="ivDisc">Diskon</label>' + moneyInp("ivDisc", ivf.discount) + '</div><div></div></div>' +
         '<div class="cb-box"><div class="cb-h"><b>Cashback</b><small>Opsional · tampil di invoice &amp; kontrak dan otomatis mengurangi total tagihan.</small></div>' +
         '<div class="g2"><div class="field"><label for="ivCbAmt">Nilai cashback</label>' + moneyInp("ivCbAmt", ivf.cashback.amount, "mis. 2.000.000") + '</div><div class="field"><label for="ivCbNote">Keterangan cashback</label><input class="inp" id="ivCbNote" placeholder="Diisi admin" value="' + esc(ivf.cashback.note || "") + '"></div></div></div>' +
+        '<div class="cb-box rd-box"><div class="cb-h"><b>Pengurangan dari paket</b><small>Opsional · layanan paket yang tidak dipakai client (mis. entertainment dari luar). Tampil di invoice di bawah cashback dan mengurangi total tagihan.</small></div><div id="ivRed"></div>' +
+        '<button type="button" class="btn small" id="ivRedAdd">' + svgI('<path d="M12 5v14M5 12h14"/>') + 'Tambah pengurangan</button></div>' +
         '<div class="cb-box bn-box"><div class="cb-h"><b>Bonus / Free</b><small>Opsional · satu baris satu item. Tampil di invoice di bawah tabel, sebelah kiri subtotal.</small></div>' +
         '<textarea class="inp tx-note sm" id="ivBonus" rows="4" placeholder="mis.&#10;Free showcase&#10;Free stall 200 pax @18.000&#10;Lampu beam&#10;Hias hantaran 6 box&#10;Undangan digital">' + esc((ivf.bonus || []).join("\n")) + '</textarea></div>' +
         '<div class="field"><label for="ivNote">Catatan invoice</label><textarea class="inp tx-note sm" id="ivNote" placeholder="mis. Harga sudah termasuk PPN">' + esc(ivf.note || "") + '</textarea></div>' +
@@ -7114,6 +7126,13 @@
     bindRp($("ivCbAmt"), v => { ivf.cashback.amount = v; ivSide(); });
     $("ivCbNote").addEventListener("input", e => { ivf.cashback.note = e.target.value; });
     $("ivBonus").addEventListener("input", e => { ivf.bonus = e.target.value.split("\n"); });
+    const renderRed = () => { const box = $("ivRed"); box.innerHTML = ivf.reduce.map((r, k) => '<div class="rd-row" data-k="' + k + '"><input class="inp rd-n" placeholder="mis. Take out entertainment (client pakai dari luar)" value="' + esc(r.name || "") + '">' + moneyInp("ivRd" + k, r.amount, "Nominal") + '<button type="button" class="btn small ghost py-del rd-x" title="Hapus">' + svgI('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>') + '</button></div>').join("");
+      box.querySelectorAll(".rd-row").forEach(row => { const k = +row.dataset.k;
+        row.querySelector(".rd-n").addEventListener("input", e => { ivf.reduce[k].name = e.target.value; });
+        bindRp($("ivRd" + k), v => { ivf.reduce[k].amount = v; ivSide(); });
+        row.querySelector(".rd-x").addEventListener("click", () => { ivf.reduce.splice(k, 1); renderRed(); ivSide(); }); }); };
+    $("ivRedAdd").addEventListener("click", () => { ivf.reduce.push({ id: uid("rd"), name: "", amount: 0 }); renderRed(); const L = $("ivRed").querySelectorAll(".rd-n"); if (L.length) L[L.length - 1].focus(); });
+    renderRed();
     $("ivNote").addEventListener("input", e => { ivf.note = e.target.value; });
     $("ivBank").addEventListener("input", e => { ivf.bank = e.target.value; });
     $("ivPax").addEventListener("input", e => { const v = parse(e.target.value); e.target.value = v || ""; ivf.catering.pax = v; });
@@ -7154,9 +7173,9 @@
         r.querySelector(".ad-x").addEventListener("click", () => { ivf.catering.items.splice(+r.dataset.i, 1); ctItems(); }); });
     }
     function ivSide(){
-      const gross = invTotal(ivf), base = (+x.price || 0) + trxAddTotal(x), paid = trxPaid(x), cbo = cbInfo({ invoice: { cashback: ivf.cashback } }), tot = cbo ? Math.max(0, gross - cbo.amount) : gross;
+      const gross = invTotal(ivf), base = (+x.price || 0) + trxAddTotal(x), paid = trxPaid(x), cbo = cbInfo({ invoice: { cashback: ivf.cashback } }), rdo = redInfo({ invoice: { reduce: ivf.reduce } }), tot = Math.max(0, gross - (cbo ? cbo.amount : 0) - (rdo ? rdo.amount : 0));
       $("ivSide").innerHTML = '<h4>Ringkasan invoice</h4><div class="sd-no"><small>No. invoice</small><b>' + esc(ivf.no || nextInvoiceNo(ivf.date)) + '</b></div>' +
-        rowKV("Subtotal", rp(gross + (+ivf.discount || 0))) + (+ivf.discount ? rowKV("Diskon", "−" + rp(ivf.discount)) : '') + (cbo ? rowKV("Cashback", "−" + rp(cbo.amount)) : '') + '<div class="sd-row tot"><span>Total invoice</span><b>' + rp(tot) + '</b></div>' +
+        rowKV("Subtotal", rp(gross + (+ivf.discount || 0))) + (+ivf.discount ? rowKV("Diskon", "−" + rp(ivf.discount)) : '') + (cbo ? rowKV("Cashback", "−" + rp(cbo.amount)) : '') + (rdo ? rdo.items.map(r => rowKV("Pengurangan" + (r.name ? " · " + esc(r.name) : ""), "−" + rp(r.amount))).join("") : '') + '<div class="sd-row tot"><span>Total invoice</span><b>' + rp(tot) + '</b></div>' +
         rowKV("Total pax", fmt((+x.pax || 0) + buffetPax(ivf.items)) + (buffetPax(ivf.items) ? ' <small style="color:var(--muted)">(' + fmt(+x.pax || 0) + ' paket + ' + fmt(buffetPax(ivf.items)) + ' buffet)</small>' : '')) + rowKV("Sudah dibayar", rp(paid)) + rowKV("Sisa tagihan", rp(Math.max(0, tot - paid))) +
         (gross !== base ? '<p class="tx-hint">Berbeda ' + (gross > base ? "+" : "−") + rp(Math.abs(gross - base)) + ' dari paket + add-ons Admin 1. Total invoice dipakai sebagai nilai transaksi, jadwal pembayaran, dan cashflow.</p>' : '') +
         (paid > tot ? '<p class="tx-warn">Total invoice lebih kecil dari yang sudah dibayar.</p>' : '') +
@@ -7173,11 +7192,12 @@
       if (!items.length) { toast("Invoice belum punya item"); return; }
       if (items.some(i => !i.qty)) { toast("Ada baris dengan qty 0 — isi qty atau hapus barisnya"); return; }
       const cbv = ivf.cashback || {}, cbOn = +cbv.amount > 0;
+      { const g0 = Math.max(0, items.reduce((a, i) => a + i.qty * i.price, 0) - (+ivf.discount || 0)), rdT = (ivf.reduce || []).reduce((a, r) => a + (+r.amount || 0), 0); if (rdT && rdT + (cbOn ? +cbv.amount : 0) >= g0) { toast("Pengurangan + cashback tidak boleh melebihi total invoice (" + rp(g0) + ")"); return; } }
       if (cbOn) { const g0 = Math.max(0, items.reduce((a, i) => a + i.qty * i.price, 0) - (+ivf.discount || 0)); if (+cbv.amount >= g0) { toast("Cashback tidak boleh melebihi total invoice (" + rp(g0) + ")"); return; } }
       if (isNoCat(x)) ivf.catering = { pax: 0, items: [], note: "" };
       const cat = { pax: ivf.catering.pax || 0, items: ivf.catering.items.filter(c => (c.name || "").trim()).map(c => ({ id: c.id, kind: c.kind, name: c.name.trim(), qty: c.qty, note: (c.note || "").trim() })), note: (ivf.catering.note || "").trim() };
       const now = new Date().toISOString();
-      x.invoice = { no: ivf.no || nextInvoiceNo(ivf.date), date: ivf.date, due: ivf.due, items, discount: +ivf.discount || 0, cashback: cbOn ? { amount: +cbv.amount, note: (cbv.note || "").trim() } : null, bonus: (ivf.bonus || []).map(b => { const o = String(b).replace(/^[\s\-•*·]+/, "").trim(), ow = o.split(/\s+/); return textCase(o).split(" ").map((w, k) => /^[A-Z]{2,3}$/.test(ow[k] || "") && w.toUpperCase() === ow[k] ? ow[k] : w).join(" "); }).filter(Boolean), note: (ivf.note || "").trim(), bank: (ivf.bank || "").trim(), catering: cat, rev: (+ivf.rev || 0) + 1, sig: invSig(x), updatedAt: now, by: meName() };
+      x.invoice = { no: ivf.no || nextInvoiceNo(ivf.date), date: ivf.date, due: ivf.due, items, discount: +ivf.discount || 0, cashback: cbOn ? { amount: +cbv.amount, note: (cbv.note || "").trim() } : null, reduce: (ivf.reduce || []).filter(r => +r.amount > 0).map(r => ({ id: r.id || uid("rd"), name: textCase((r.name || "").trim()) || "Pengurangan paket", amount: +r.amount })), bonus: (ivf.bonus || []).map(b => { const o = String(b).replace(/^[\s\-•*·]+/, "").trim(), ow = o.split(/\s+/); return textCase(o).split(" ").map((w, k) => /^[A-Z]{2,3}$/.test(ow[k] || "") && w.toUpperCase() === ow[k] ? ow[k] : w).join(" "); }).filter(Boolean), note: (ivf.note || "").trim(), bank: (ivf.bank || "").trim(), catering: cat, rev: (+ivf.rev || 0) + 1, sig: invSig(x), updatedAt: now, by: meName() };
       if (x.invoice.bank) data.invBank = x.invoice.bank;
       x.seen = Object.assign({}, x.seen, { a3: true });
       await putTrx(x); ivf = null; toast("Invoice " + x.invoice.no + " & kontrak " + curContractNo(x) + " disimpan ✓");
@@ -7338,7 +7358,7 @@
     const x = normContract(clone(x0)), inv = x.invoice, d = Pdf({ serif: true }), W = d.W, H = d.H, ML = 66, MR = 60, CW = W - ML - MR, TOP = 58, BOT = 74;
     const INK = "#111111", BODY = "#1c1c1c", MUTED = "#6b6458", GOLD = "#a8822e", RL = "#d9d3c6";
     const lj = logoJpeg(true); if (lj) d.setImage(lj.b, lj.w, lj.h);
-    const FS = 9.6, LH = 13.4, SM = 9, money = v => (v < 0 ? "- Rp " : "Rp ") + fmt(Math.abs(Math.round(+v || 0))), gross = invTotal(inv), cbo = cbInfo(x), tot = cbo ? Math.max(0, gross - cbo.amount) : gross, paid = trxPaid(x);
+    const FS = 9.6, LH = 13.4, SM = 9, money = v => (v < 0 ? "- Rp " : "Rp ") + fmt(Math.abs(Math.round(+v || 0))), gross = invTotal(inv), cbo = cbInfo(x), rdo = redInfo(x), tot = Math.max(0, gross - (cbo ? cbo.amount : 0) - (rdo ? rdo.amount : 0)), paid = trxPaid(x);
     const wrap = (t, maxW, size, bold) => { const out = []; String(t || "").split("\n").forEach(par => { let ln = ""; par.split(" ").forEach(w => { const tr = ln ? ln + " " + w : w; if (d.width(tr, size, bold) > maxW && ln) { out.push(ln); ln = w; } else ln = tr; }); out.push(ln); }); return out; };
     let y = 0;
     const ensure = need => { if (y + need > H - BOT) { d.addPage(); y = TOP; } };
@@ -7381,6 +7401,7 @@
       bL.forEach(ls => ls.forEach((l, k) => { if (!k) d.text("•", ML + 2, yb + 10, { size: SM + 0.2, color: GOLD }); d.text(l, ML + 12, yb + 10, { size: SM + 0.2, color: BODY }); yb += 12; })); }
     const line = (k, v, o) => { o = o || {}; d.text(k, sx, y + 10, { size: o.size || FS, bold: o.b, color: BODY }); d.text(v, W - MR - 4, y + 10, { size: o.size || FS, bold: o.b, color: o.c || INK, align: "right" }); y += LH; };
     line("Subtotal", money(gross + (+inv.discount || 0))); if (+inv.discount) line("Diskon", "- " + money(+inv.discount)); if (cbo) line("Cashback", "- " + money(cbo.amount), { c: "#1f6b3e" });
+    if (rdo) rdo.items.forEach(r => { const nl = wrap("Pengurangan: " + r.name, 128, FS - 0.6); nl.forEach((l, k) => { d.text(l, sx, y + 10, { size: FS - 0.6, color: BODY }); if (k === nl.length - 1) d.text("- " + money(r.amount), W - MR - 4, y + 10, { size: FS, color: "#9b2c22", align: "right" }); y += k === nl.length - 1 ? LH : 11.5; }); });
     d.line(sx, y + 1, W - MR, y + 1, INK, 0.7); y += 5; line("Total", money(tot), { b: true, size: 10.6 });
     line("Sudah dibayar", money(paid), { c: "#1f6b3e" });
     d.line(sx, y + 1, W - MR, y + 1, INK, 0.7); d.line(sx, y + 3.5, W - MR, y + 3.5, INK, 0.7); y += 7;
